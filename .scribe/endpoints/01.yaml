@@ -1,0 +1,112 @@
+name: Auth
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: Login
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      X-Requested-With: XMLHttpRequest
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      login:
+        custom: []
+        name: login
+        description: 'Email or phone number.'
+        required: true
+        example: 'example@example.com or +243993002040'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: Password.
+        required: true
+        example: password
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      device_name:
+        custom: []
+        name: device_name
+        description: 'unique device identifier.'
+        required: true
+        example: 'iPhone 16'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      login: 'example@example.com or +243993002040'
+      password: password
+      device_name: 'iPhone 16'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: Login
+      subgroupDescription: ''
+      title: 'Logout user and invalidate token'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      X-Requested-With: XMLHttpRequest
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Logged out successfully"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
