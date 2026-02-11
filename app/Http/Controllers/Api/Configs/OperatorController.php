@@ -11,6 +11,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Operator;
 
+/**
+ * @group Configurations
+ *
+ * @subgroup Operators
+ */
 class OperatorController extends Controller
 {
     public function __construct(private OperatorService $service){}

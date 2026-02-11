@@ -24,11 +24,14 @@ final class CustomCspPolicy implements Preset
 
         $policy->add(Directive::SCRIPT, [
             Keyword::SELF,
+            Keyword::UNSAFE_INLINE,
             $frontEndDevServer,
         ])
             ->add(Directive::STYLE, [
                 Keyword::SELF,
+                Keyword::UNSAFE_INLINE,
                 $frontEndDevServer,
+                'https://fonts.bunny.net',
             ])
             ->add(Directive::FORM_ACTION, [
                 Keyword::SELF,
@@ -36,12 +39,14 @@ final class CustomCspPolicy implements Preset
             ->add(Directive::IMG, [
                 Keyword::SELF,
                 $frontEndDevServer,
-                'cdn.futatrans.com',
+                'cdn.tams.com',
                 'data:',
+                'https:',
             ])
             ->add(Directive::FONT, [
                 Keyword::SELF,
                 $frontEndDevServer,
+                'https://fonts.bunny.net',
                 'data:',
             ])
             ->add(Directive::CONNECT, [
