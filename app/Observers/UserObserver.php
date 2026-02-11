@@ -13,6 +13,10 @@ final class UserObserver
      */
     public function creating(User $user)
     {
+        // If We Didnt Passed Any UUID On user Creation then We Generate One
+        if (is_null($user->uuid)) {
+            $user->uuid = $user->newUniqueId();
+        }
         // If We Didnt Passed Any  Id On user Creation then We Generate One
         if (is_null($user->username)) {
             $user->username = User::generateUsername($user);

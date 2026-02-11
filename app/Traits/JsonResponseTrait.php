@@ -29,4 +29,15 @@ trait JsonResponseTrait
     {
         return response()->json(['message' => $message], $status, [], JSON_NUMERIC_CHECK);
     }
+
+    public function sendResponse($result, string $message = '', int $status = Response::HTTP_OK): JsonResponse
+    {
+        $response = [
+            'success' => true,
+            'data' => $result,
+            'message' => $message,
+        ];
+
+        return response()->json($response, $status, [], JSON_NUMERIC_CHECK);
+    }
 }

@@ -16,4 +16,7 @@ return [
     'thank_you' => 'Merci',
     'regards' => 'Cordialement',
     'notifications_marked_as_read' => 'Notifications marquées comme lues.',
+    'country_created_successfully' => 'Pays créé avec succès',
+    'country_updated_successfully' => 'Pays mis à jour avec succès',
+    'country_deleted_successfully' => 'Pays supprimé avec succès',
 ];

@@ -16,4 +16,7 @@ return [
     'thank_you' => 'Thank you',
     'regards' => 'Regards',
     'notifications_marked_as_read' => 'Notifications marked as read.',
+    'country_created_successfully' => 'Country created successfully',
+    'country_updated_successfully' => 'Country updated successfully',
+    'country_deleted_successfully' => 'Country deleted successfully',
 ];

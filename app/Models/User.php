@@ -9,9 +9,11 @@ use Spatie\DeletedModels\Models\Concerns\KeepsDeletedModels;
 
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 // use Laravel\Passport\Contracts\OAuthenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 use App\Casts\TimezoneAwareDateTime;
 // use Laravel\Passport\HasApiTokens;
 use Laravel\Sanctum\HasApiTokens;
@@ -26,7 +28,7 @@ use App\Concerns\Media\MediaMapping;
 final class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use Activable, HasApiTokens, HasFactory, HasMedia, HasUuid, KeepsDeletedModels, Notifiable;
+    use Activable, HasApiTokens, HasFactory, HasRoles, HasMedia, HasUuid, KeepsDeletedModels, Notifiable;
 
     /**
      * The attributes that are mass assignable.
