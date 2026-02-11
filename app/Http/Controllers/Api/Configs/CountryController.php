@@ -22,7 +22,7 @@ class CountryController extends Controller
     {
         $countries = $this->service->getCountries($request);
 
-        return $this->sendData($countries);//CountryResource::collection($countries));
+        return CountryResource::collection($countries);
     }
 
     /**

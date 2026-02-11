@@ -37,7 +37,6 @@ trait HasMedia
         if (!$this->exists) {
             self::created(function (Model $model) use ($file, $property) {
                 $model->attachMedia($file, $property);
-                $model->save();
             });
             return true;
         }
@@ -51,6 +50,7 @@ trait HasMedia
         if ($stored) {
             $this->detachMedia($property);
             $this->setAttribute($property, $filename);
+            $this->save();
         }
         return boolval($stored);
     }

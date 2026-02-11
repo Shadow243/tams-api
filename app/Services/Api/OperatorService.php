@@ -7,7 +7,6 @@ namespace App\Services\Api;
 use App\Models\Operator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Service Class For Operator
@@ -35,6 +34,8 @@ final class OperatorService
      */
     public function create(array $data): Operator
     {
+        // Remove logo from data as it will be handled separately
+        unset($data['logo']);
         return Operator::create($data);
     }
 
@@ -46,6 +47,8 @@ final class OperatorService
      */
     public function update(Operator $operator, array $data): Operator
     {
+        // Remove logo from data as it will be handled separately
+        unset($data['logo']);
         $operator->update($data);
         return $operator->fresh(['country']);
     }
@@ -70,24 +73,20 @@ final class OperatorService
         $search = $request->input('search');
         $countryId = $request->input('country_id');
 
-        $cacheKey = 'operators_list_' . md5($search . $perPage . $countryId . $request->input('page', 1));
+        $query = Operator::query()
+            ->with('country:id,name,code')
+            ->select(['id', 'name', 'country_id', 'logo', 'created_at', 'updated_at']);
 
-        return Cache::remember($cacheKey, 3600, function () use ($search, $perPage, $countryId) {
-            $query = Operator::query()
-                ->with('country:id,name,code')
-                ->select(['id', 'name', 'country_id', 'logo', 'created_at', 'updated_at']);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . addcslashes($search, '%_\\\\') . '%');
+            });
+        }
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . addcslashes($search, '%_\\\\') . '%');
-                });
-            }
+        if ($countryId) {
+            $query->where('country_id', $countryId);
+        }
 
-            if ($countryId) {
-                $query->where('country_id', $countryId);
-            }
-
-            return $query->orderBy('name')->paginate($perPage);
-        });
+        return $query->orderBy('name')->paginate($perPage);
     }
 }

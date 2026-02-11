@@ -6,7 +6,6 @@ namespace App\Services\Api;
 
 use App\Models\Country;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Class CountryService
@@ -55,19 +54,15 @@ final class CountryService
         $perPage = min((int) $request->input('per_page', 10), 100);
         $search = $request->input('search');
 
-        $cacheKey = 'countries_list_' . md5($search . $perPage . $request->input('page', 1));
+        $query = Country::query()->select(['id', 'name', 'code', 'created_at', 'updated_at']);
 
-        return Cache::remember($cacheKey, 3600, function () use ($search, $perPage) {
-            $query = Country::query()->select(['id', 'name', 'code', 'created_at', 'updated_at']);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . addcslashes($search, '%_\\') . '%')
+                  ->orWhere('code', 'like', '%' . addcslashes($search, '%_\\') . '%');
+            });
+        }
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . addcslashes($search, '%_\\') . '%')
-                      ->orWhere('code', 'like', '%' . addcslashes($search, '%_\\') . '%');
-                });
-            }
-
-            return $query->orderBy('name')->paginate($perPage);
-        });
+        return $query->orderBy('name')->paginate($perPage);
     }
 }

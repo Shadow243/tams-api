@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\Configs;
 
-use App\Http\Requests\Api\OperatorRequest;
 use App\Http\Resources\Api\OperatorResource;
+use App\Http\Requests\Api\OperatorRequest;
 use App\Services\Api\OperatorService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class OperatorController extends Controller
     {
         $operators = $this->service->getOperators($request);
         
-        return $this->sendData($operators);//OperatorResource::collection($operators));
+        return OperatorResource::collection($operators);
     }
 
     /**
@@ -33,7 +33,7 @@ class OperatorController extends Controller
         $model = $this->service->create($request->validated());
 
         if ($request->hasFile('logo')) {
-            $this->service->uploadLogo($model, $request->file('logo'));
+            $model = $this->service->uploadLogo($model, $request->file('logo'));
         }
 
         return $this->sendResponse(new OperatorResource($model->load('country')), __('messages.operator_created_successfully'), 201);
@@ -56,10 +56,10 @@ class OperatorController extends Controller
         $model = $this->service->update($operator, $request->validated());
 
         if ($request->hasFile('logo')) {
-            $this->service->uploadLogo($model, $request->file('logo'));
+            $model = $this->service->uploadLogo($model, $request->file('logo'));
         }
 
-        return $this->sendResponse(new OperatorResource($model), __('messages.operator_updated_successfully'));
+        return $this->sendResponse(new OperatorResource($model->load('country')), __('messages.operator_updated_successfully'));
     }
 
     /**

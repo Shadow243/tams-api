@@ -43,9 +43,5 @@ class Operator extends Model
             directory: 'operators/logos',
             filename: fn ($model) => $model->id . '-' . time()
         );
-
-        static::created(fn() => Cache::forget('operators_list'));
-        static::updated(fn() => Cache::forget('operators_list'));
-        static::deleted(fn() => Cache::forget('operators_list'));
     }
 }
