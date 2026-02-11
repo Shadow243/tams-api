@@ -13,21 +13,16 @@ use App\Models\Country;
 
 class CountryController extends Controller
 {
-    public function __construct(private CountryService $service)
-    {
-        $this->middleware('auth:sanctum');
-        $this->middleware('permission:lire_pays')->only(['index', 'show']);
-        $this->middleware('permission:creer_pays')->only('store');
-        $this->middleware('permission:editer_pays')->only('update');
-        $this->middleware('permission:supprimer_pays')->only('destroy');
-    }
+    public function __construct(private CountryService $service){}
     
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        return $this->service->getCountries($request);
+        $countries = $this->service->getCountries($request);
+
+        return $this->sendData($countries);//CountryResource::collection($countries));
     }
 
     /**

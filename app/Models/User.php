@@ -43,6 +43,7 @@ final class User extends Authenticatable implements HasLocalePreference
         'password',
         'phone_number',
         'country_code',
+        'avatar',
         'active',
         'timezone'
     ];
@@ -57,20 +58,17 @@ final class User extends Authenticatable implements HasLocalePreference
         'remember_token',
     ];
 
-    protected static array $mediaMapping = [];
-
-    public static function registerMediaForProperty(
-    string $property,
-    string $directory,
-    string|\Closure $filename,
-    string $disk = 'public',
-): void {
-    static::$mediaMapping[$property] = new MediaMapping(
-        directory: $directory,
-        filename: $filename,
-        disk: $disk,
-    );
-}
+    /**
+     * Boot the model.
+     */
+    protected static function booted(): void
+    {
+        static::registerMediaForProperty(
+            property: 'avatar',
+            directory: 'avatars',
+            filename: fn ($model) => $model->username . '-' . time()
+        );
+    }
 
     public static function generateUsername(self $user)
     {

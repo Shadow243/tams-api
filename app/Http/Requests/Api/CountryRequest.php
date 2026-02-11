@@ -39,8 +39,8 @@ class CountryRequest extends FormRequest
             'code' => [
                 'required',
                 'string',
-                'max:10',
-                'alpha',
+                'max:3',
+                // 'alpha',
                 Rule::unique('countries', 'code')->ignore($countryId),
             ],
         ];

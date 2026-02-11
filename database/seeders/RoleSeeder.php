@@ -98,6 +98,10 @@ class RoleSeeder extends Seeder
                 'module_name' => $modules[1]
             ],
             [
+                'name' => 'gerer operateurs',
+                'module_name' => $modules[1]
+            ],
+            [
                 'name' => 'gerer impressions',
                 'module_name' => $modules[1]
             ],
