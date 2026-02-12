@@ -1,9 +1,16 @@
 <?php
 
-beforeEach(function () {
-   \Illuminate\Support\Facades\Storage::fake('public');
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
+use App\Concerns\Media\HasMedia;
 
-   \Illuminate\Support\Facades\Schema::create('media_test', function ($table) {
+beforeEach(function () {
+   Storage::fake('public');
+
+   Schema::create('media_test', function ($table) {
       $table->id();
       $table->string('name')->nullable();
        $table->string('namewithid')->nullable();
@@ -11,42 +18,43 @@ beforeEach(function () {
       $table->timestamps();
    });
 
-   \Illuminate\Support\Str::createRandomStringsUsing(fn () => 'aaa');
+   Str::createRandomStringsUsing(fn () => 'aaa');
+   
+   // Define test model helper
+   $this->getTestModel = function () {
+       return new class extends Model {
+           use HasMedia;
+
+           protected $table = 'media_test';
+           protected $guarded = [];
+
+           protected static function booted()
+           {
+               self::registerMediaForProperty(
+                   property: 'name',
+                   directory: 'documents',
+                   filename: 'slug'
+               );
+               self::registerMediaForProperty(
+                   property: 'namewithid',
+                   directory: 'documents',
+                   filename: fn ($model) => $model->id . '-' . Str::random(16),
+               );
+           }
+       };
+   };
 });
 
 afterEach(function () {
-   \Illuminate\Support\Facades\Schema::dropIfExists('media_test');
-   \Illuminate\Support\Str::createRandomStringsNormally();
+   Schema::dropIfExists('media_test');
+   Str::createRandomStringsNormally();
 });
 
-class TestModel extends \Illuminate\Database\Eloquent\Model {
-
-    use \App\Concerns\Media\HasMedia;
-
-    protected $table = 'media_test';
-    protected $guarded = [];
-
-    protected static function booted()
-    {
-        self::registerMediaForProperty(
-            property: 'name',
-            directory: 'documents',
-            filename: 'slug'
-        );
-        self::registerMediaForProperty(
-            property: 'namewithid',
-            directory: 'documents',
-            filename: fn ($model) => $model->id . '-' . \Illuminate\Support\Str::random(16),
-        );
-    }
-
-}
-
 it('should attach media correctly', function () {
-    $model = new TestModel();
+    $model = ($this->getTestModel)();
     $model->slug = 'demo';
     $model->save();
-    $model->attachMedia(\Illuminate\Http\UploadedFile::fake()->create('cv.pdf', 100), 'name');
+    $model->attachMedia(UploadedFile::fake()->create('cv.pdf', 100), 'name');
     expect($model->name)->toBe('demo.pdf');
-    \Illuminate\Support\Facades\Storage::disk('public')->assertExists('documents/demo.pdf');
+    Storage::disk('public')->assertExists('documents/demo.pdf');
 });

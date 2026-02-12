@@ -52,4 +52,9 @@ final class LoginController extends Controller
             'token' => $token,
         ]);
     }
+
+    public function me()
+    {
+        return $this->sendData(new UserResource(auth()->user()));
+    }
 }
