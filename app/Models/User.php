@@ -10,6 +10,7 @@ use Spatie\DeletedModels\Models\Concerns\KeepsDeletedModels;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 // use Laravel\Passport\Contracts\OAuthenticatable;
 use Illuminate\Notifications\Notifiable;

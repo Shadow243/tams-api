@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Configs\CountryController;
 use App\Http\Controllers\Api\Configs\OperatorController;
+use App\Http\Controllers\Api\Users\UserController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -55,5 +56,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('operators/{operator}', [OperatorController::class, 'update'])->middleware('permission:editer_operateurs')->name('operators.update');
         Route::patch('operators/{operator}', [OperatorController::class, 'update'])->middleware('permission:editer_operateurs');
         Route::delete('operators/{operator}', [OperatorController::class, 'destroy'])->middleware('permission:supprimer_operateurs')->name('operators.destroy');
+    });
+
+    Route::prefix('users')->name('users.')->group(function () {
+        // Users Routes
+        Route::get('/', [UserController::class, 'index'])->middleware('permission:lire_utilisateurs')->name('index');
+        Route::post('/', [UserController::class, 'store'])->middleware('permission:creer_utilisateurs')->name('store');
+        Route::post('/bulk-delete', [UserController::class, 'bulkDestroy'])->middleware('permission:supprimer_utilisateurs')->name('bulkDestroy');
+        Route::get('/export/pdf', [UserController::class, 'exportPDF'])->middleware('permission:lire_utilisateurs')->name('exportPDF');
+        Route::get('{user}', [UserController::class, 'show'])->middleware('permission:lire_utilisateurs')->name('show');
+        Route::put('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs')->name('update');
+        Route::patch('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs');
+        Route::delete('{user}', [UserController::class, 'destroy'])->middleware('permission:supprimer_utilisateurs')->name('destroy');
     });
 });

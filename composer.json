@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "*",
         "brick/money": "*",
         "gladcodes/keygen": "*",
         "knuckleswtf/scribe": "*",

@@ -148,7 +148,7 @@ class RoleSeeder extends Seeder
                 'module_name' => $modules[2]
             ],
             [
-                'name' => 'gerer users',
+                'name' => 'gerer utilisateurs',
                 'module_name' => $modules[2]
             ],
             [

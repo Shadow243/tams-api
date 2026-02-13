@@ -15,6 +15,27 @@ return [
     'phone_verified' => 'Phone verified.',
     'reset_code_sent' => 'If the account exists, a reset code has been sent.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    
+    // Login page translations
+    'login' => [
+        'pageTitle' => 'Sign In',
+        'title' => 'Great to see you here 👋',
+        'subtitle' => 'You\'re just one step away - sign in to continue.',
+        'signInWith' => 'Sign in with',
+        'continueWithEmail' => 'Continue with Email',
+        'emailLabel' => 'Email address',
+        'emailPlaceholder' => 'you@example.com',
+        'passwordLabel' => 'Password',
+        'passwordPlaceholder' => '••••••••',
+        'rememberMe' => 'Keep me signed in',
+        'forgotPassword' => 'Forgot Password?',
+        'signInButton' => 'Sign In',
+        'newHere' => 'New here?',
+        'createAccount' => 'Create an account',
+        'copyright' => '©2026 TAMS — by',
+        'author' => 'Steven NG.',
+        'required' => '*',
+    ],
     'verification' => [
         'contact_help' => ': we\'ll help you secure and review your account. Otherwise, no action is required.',
         'contact_us' => 'Let us know',
