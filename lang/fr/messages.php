@@ -19,4 +19,7 @@ return [
     'country_created_successfully' => 'Pays créé avec succès',
     'country_updated_successfully' => 'Pays mis à jour avec succès',
     'country_deleted_successfully' => 'Pays supprimé avec succès',
+    'operator_created_successfully' => 'Opérateur créé avec succès',
+    'operator_updated_successfully' => 'Opérateur mis à jour avec succès',
+    'operator_deleted_successfully' => 'Opérateur supprimé avec succès',
 ];
