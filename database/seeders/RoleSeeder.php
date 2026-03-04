@@ -94,11 +94,23 @@ class RoleSeeder extends Seeder
                 'module_name' => $modules[1]
             ],
             [
+                'name' => 'gerer portefeuilles',
+                'module_name' => $modules[1]
+            ],
+            [
+                'name' => 'gerer types_operations',
+                'module_name' => $modules[1]
+            ],
+            [
                 'name' => 'gerer frais',
                 'module_name' => $modules[1]
             ],
             [
                 'name' => 'gerer pays',
+                'module_name' => $modules[1]
+            ],
+            [
+                'name' => 'gerer branches',
                 'module_name' => $modules[1]
             ],
             [
@@ -109,6 +121,10 @@ class RoleSeeder extends Seeder
                 'name' => 'gerer impressions',
                 'module_name' => $modules[1]
             ],
+            [
+                'name' => 'gerer types_operations',
+                'module_name' => $modules[1]
+            ]
         ];
 
         $superviseurPermissions = [];

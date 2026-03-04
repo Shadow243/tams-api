@@ -9,4 +9,10 @@ return [
     'transactions' => 'Transactions',
     'params' => 'Paramètres',
     'users' => 'Utilisateurs',
+    'operators' => 'Opérateurs',
+    'branches' => 'Agences',
+    'wallets' => 'Portefeuilles',
+    'transaction_types' => 'Types d\'Opérations',
+    'roles' => 'Rôles',
+    'countries' => 'Pays',
 ];
