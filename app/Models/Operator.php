@@ -7,12 +7,13 @@ namespace App\Models;
 use App\Concerns\Media\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Spatie\DeletedModels\Models\Concerns\KeepsDeletedModels;
 
 class Operator extends Model
 {
-    use HasMedia, SoftDeletes;
+    use HasMedia, KeepsDeletedModels;
 
     /**
      * The attributes that are mass assignable.

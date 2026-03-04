@@ -1,0 +1,99 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Enums\WalletStatus;
+use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\DeletedModels\Models\Concerns\KeepsDeletedModels;
+
+class Wallet extends Model
+{
+    use HasFactory, HasUuid, KeepsDeletedModels;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'branch_id',
+        'operator_id',
+        'wallet_number',
+        'balance',
+        'currency',
+        'status',
+    ];
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'wallets';
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => WalletStatus::class,
+            'balance' => 'decimal:2',
+        ];
+    }
+
+    /**
+     * Get the branch that owns the wallet.
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Get the operator that owns the wallet.
+     */
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(Operator::class);
+    }
+
+    /**
+     * Scope a query to only include active wallets.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', WalletStatus::ACTIVE);
+    }
+
+    /**
+     * Scope a query to only include inactive wallets.
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('status', WalletStatus::INACTIVE);
+    }
+
+    /**
+     * Check if wallet has sufficient balance
+     */
+    public function hasSufficientBalance(float $amount): bool
+    {
+        return $this->balance >= $amount;
+    }
+
+    /**
+     * Get formatted balance with currency
+     */
+    public function getFormattedBalanceAttribute(): string
+    {
+        return number_format((float) $this->balance, 2) . ' ' . $this->currency;
+    }
+}
