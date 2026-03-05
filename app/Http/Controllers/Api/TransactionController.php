@@ -1,0 +1,251 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Api;
+
+use App\Enums\TransactionStatus;
+use App\Http\Resources\Api\TransactionResource;
+use App\Http\Requests\Api\TransactionRequest;
+use App\Services\Api\TransactionService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Transaction;
+
+/**
+ * @group Transactions
+ */
+class TransactionController extends Controller
+{
+    public function __construct(private TransactionService $service){}
+    
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $transactions = $this->service->getTransactions($request);
+
+        return TransactionResource::collection($transactions);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(TransactionRequest $request)
+    {
+        $model = $this->service->create($request->validated());
+
+        // Load relationships
+        $model->load([
+            'transactionType',
+            'branch',
+            'destinationBranch',
+            'user',
+            'customer',
+            'wallet',
+            'feeRule'
+        ]);
+
+        return $this->sendResponse(
+            new TransactionResource($model), 
+            __('messages.transaction_created_successfully'), 
+            201
+        );
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Transaction $transaction)
+    {
+        $transaction->load([
+            'transactionType',
+            'branch',
+            'destinationBranch',
+            'user',
+            'customer',
+            'wallet',
+            'feeRule',
+            'parentTransaction',
+            'childTransactions'
+        ]);
+        
+        return $this->sendData(new TransactionResource($transaction));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(TransactionRequest $request, Transaction $transaction)
+    {
+        if (!$transaction->canBeModified()) {
+            return $this->sendError(
+                __('messages.transaction_cannot_be_modified'),
+                403
+            );
+        }
+
+        $model = $this->service->update($transaction, $request->validated());
+
+        // Load relationships
+        $model->load([
+            'transactionType',
+            'branch',
+            'destinationBranch',
+            'user',
+            'customer',
+            'wallet',
+            'feeRule'
+        ]);
+
+        return $this->sendResponse(
+            new TransactionResource($model), 
+            __('messages.transaction_updated_successfully')
+        );
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Transaction $transaction)
+    {
+        if (!$transaction->canBeCancelled()) {
+            return $this->sendError(
+                __('messages.transaction_cannot_be_deleted'),
+                403
+            );
+        }
+
+        $this->service->destroy($transaction);
+
+        return $this->sendResponse(
+            null, 
+            __('messages.transaction_deleted_successfully')
+        );
+    }
+
+    /**
+     * Cancel a transaction
+     */
+    public function cancel(Transaction $transaction)
+    {
+        try {
+            $model = $this->service->cancel($transaction);
+            $model->load(['transactionType', 'branch', 'user', 'customer']);
+
+            return $this->sendResponse(
+                new TransactionResource($model),
+                __('messages.transaction_cancelled_successfully')
+            );
+        } catch (\Exception $e) {
+            return $this->sendError($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * Complete a transaction
+     */
+    public function complete(Transaction $transaction)
+    {
+        $model = $this->service->complete($transaction);
+        $model->load(['transactionType', 'branch', 'user', 'customer']);
+
+        return $this->sendResponse(
+            new TransactionResource($model),
+            __('messages.transaction_completed_successfully')
+        );
+    }
+
+    /**
+     * Change transaction status
+     */
+    public function changeStatus(Request $request, Transaction $transaction)
+    {
+        $request->validate([
+            'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, TransactionStatus::cases()))]
+        ]);
+
+        $status = TransactionStatus::from($request->status);
+        $model = $this->service->changeStatus($transaction, $status);
+        $model->load(['transactionType', 'branch', 'user', 'customer']);
+
+        return $this->sendResponse(
+            new TransactionResource($model),
+            __('messages.transaction_status_updated_successfully')
+        );
+    }
+
+    /**
+     * Verify withdrawal code
+     */
+    public function verifyWithdrawalCode(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6']
+        ]);
+
+        $transaction = $this->service->verifyWithdrawalCode($request->code);
+
+        if (!$transaction) {
+            return $this->sendError(
+                __('messages.invalid_withdrawal_code'),
+                404
+            );
+        }
+
+        $transaction->load(['transactionType', 'branch', 'user', 'customer']);
+
+        return $this->sendData(new TransactionResource($transaction));
+    }
+
+    /**
+     * Get transaction statistics
+     */
+    public function statistics(Request $request)
+    {
+        $statistics = $this->service->getStatistics($request);
+
+        return $this->sendData($statistics);
+    }
+
+    /**
+     * Generate receipt for a transaction
+     */
+    public function receipt(Transaction $transaction)
+    {
+        // Load all necessary relationships
+        $transaction->load([
+            'transactionType',
+            'branch',
+            'destinationBranch',
+            'user',
+            'customer',
+            'wallet',
+            'feeRule'
+        ]);
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('pdf.transaction-receipt', [
+            'transaction' => $transaction,
+        ])->setPaper([0, 0, 226, 566], 'portrait'); // 80mm x 200mm thermal paper
+
+        return $pdf->download('receipt-' . $transaction->reference . '.pdf');
+    }
+
+    /**
+     * Export transactions to PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        $transactions = $this->service->getTransactions($request)->items();
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('pdf.transactions', [
+            'transactions' => $transactions,
+            'filters' => $request->all(),
+        ]);
+
+        return $pdf->download('transactions-' . date('Y-m-d-H-i-s') . '.pdf');
+    }
+}

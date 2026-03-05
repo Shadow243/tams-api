@@ -7,8 +7,11 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Configs\BranchController;
 use App\Http\Controllers\Api\Configs\CountryController;
+use App\Http\Controllers\Api\Configs\FeeRuleController;
 use App\Http\Controllers\Api\Configs\OperatorController;
 use App\Http\Controllers\Api\Configs\TransactionTypeController;
+use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\Configs\WalletController;
 use App\Http\Controllers\Api\Users\UserController;
 
@@ -88,6 +91,47 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('transaction-types/{transactionType}', [TransactionTypeController::class, 'update'])->middleware('permission:editer_types_operations')->name('transaction-types.update');
         Route::patch('transaction-types/{transactionType}', [TransactionTypeController::class, 'update'])->middleware('permission:editer_types_operations');
         Route::delete('transaction-types/{transactionType}', [TransactionTypeController::class, 'destroy'])->middleware('permission:supprimer_types_operations')->name('transaction-types.destroy');
+
+        // Fee Rules Routes
+        Route::get('fee-rules', [FeeRuleController::class, 'index'])->middleware('permission:lire_regles_frais')->name('fee-rules.index');
+        Route::get('fee-rules/export/pdf', [FeeRuleController::class, 'exportPDF'])->middleware('permission:lire_regles_frais')->name('fee-rules.exportPDF');
+        Route::get('fee-rules/applicable', [FeeRuleController::class, 'getApplicable'])->middleware('permission:lire_regles_frais')->name('fee-rules.applicable');
+        Route::post('fee-rules', [FeeRuleController::class, 'store'])->middleware('permission:creer_regles_frais')->name('fee-rules.store');
+        Route::get('fee-rules/{feeRule}', [FeeRuleController::class, 'show'])->middleware('permission:lire_regles_frais')->name('fee-rules.show');
+        Route::put('fee-rules/{feeRule}', [FeeRuleController::class, 'update'])->middleware('permission:editer_regles_frais')->name('fee-rules.update');
+        Route::patch('fee-rules/{feeRule}', [FeeRuleController::class, 'update'])->middleware('permission:editer_regles_frais');
+        Route::delete('fee-rules/{feeRule}', [FeeRuleController::class, 'destroy'])->middleware('permission:supprimer_regles_frais')->name('fee-rules.destroy');
+        Route::patch('fee-rules/{feeRule}/toggle-status', [FeeRuleController::class, 'toggleStatus'])->middleware('permission:editer_regles_frais')->name('fee-rules.toggle-status');
+    });
+
+    // Transactions Routes
+    Route::prefix('transactions')->name('transactions.')->group(function () {
+        Route::get('/', [TransactionController::class, 'index'])->middleware('permission:lire_transactions')->name('index');
+        Route::get('/statistics', [TransactionController::class, 'statistics'])->middleware('permission:lire_transactions')->name('statistics');
+        Route::get('/export/pdf', [TransactionController::class, 'exportPDF'])->middleware('permission:lire_transactions')->name('exportPDF');
+        Route::post('/verify-withdrawal', [TransactionController::class, 'verifyWithdrawalCode'])->name('verify-withdrawal');
+        Route::post('/', [TransactionController::class, 'store'])->middleware('permission:creer_transactions')->name('store');
+        Route::get('/{transaction}', [TransactionController::class, 'show'])->middleware('permission:lire_transactions')->name('show');
+        Route::get('/{transaction}/receipt', [TransactionController::class, 'receipt'])->middleware('permission:lire_transactions')->name('receipt');
+        Route::put('/{transaction}', [TransactionController::class, 'update'])->middleware('permission:editer_transactions')->name('update');
+        Route::patch('/{transaction}', [TransactionController::class, 'update'])->middleware('permission:editer_transactions');
+        Route::delete('/{transaction}', [TransactionController::class, 'destroy'])->middleware('permission:supprimer_transactions')->name('destroy');
+        Route::patch('/{transaction}/cancel', [TransactionController::class, 'cancel'])->middleware('permission:editer_transactions')->name('cancel');
+        Route::patch('/{transaction}/complete', [TransactionController::class, 'complete'])->middleware('permission:editer_transactions')->name('complete');
+        Route::patch('/{transaction}/change-status', [TransactionController::class, 'changeStatus'])->middleware('permission:editer_transactions')->name('change-status');
+    });
+
+    // Customers Routes
+    Route::prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->middleware('permission:lire_clients')->name('index');
+        Route::get('/find-by-phone', [CustomerController::class, 'findByPhone'])->middleware('permission:lire_clients')->name('find-by-phone');
+        Route::get('/top', [CustomerController::class, 'topCustomers'])->middleware('permission:lire_clients')->name('top');
+        Route::post('/', [CustomerController::class, 'store'])->middleware('permission:creer_clients')->name('store');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->middleware('permission:lire_clients')->name('show');
+        Route::get('/{customer}/statistics', [CustomerController::class, 'statistics'])->middleware('permission:lire_clients')->name('statistics');
+        Route::put('/{customer}', [CustomerController::class, 'update'])->middleware('permission:editer_clients')->name('update');
+        Route::patch('/{customer}', [CustomerController::class, 'update'])->middleware('permission:editer_clients');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->middleware('permission:supprimer_clients')->name('destroy');
     });
 
     Route::prefix('users')->name('users.')->group(function () {

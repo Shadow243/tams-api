@@ -124,6 +124,10 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'gerer types_operations',
                 'module_name' => $modules[1]
+            ],
+            [
+                'name' => 'gerer regles_frais',
+                'module_name' => $modules[1]
             ]
         ];
 
