@@ -55,7 +55,7 @@ return [
     'full_name' => 'Nom complet',
     'phone' => 'Téléphone',
     'national_id' => 'Numéro d\'identité nationale',
-    'phone_format_invalid' => 'Le format du numéro de téléphone est invalide (exemple: 237XXXXXXXXX)',
+    'phone_format_invalid' => 'Le format du numéro de téléphone est invalide (exemple: 243XXXXXXXXX)',
     'phone_already_exists' => 'Ce numéro de téléphone existe déjà',
     'national_id_already_exists' => 'Ce numéro d\'identité nationale existe déjà',
 ];

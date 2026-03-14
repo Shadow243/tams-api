@@ -45,7 +45,7 @@ class WalletController extends Controller
      */
     public function show(Wallet $wallet)
     {
-        $wallet->load(['branch', 'operator']);
+        $wallet->load(['branch', 'operator', 'currency']);
         
         return $this->sendData(new WalletResource($wallet));
     }

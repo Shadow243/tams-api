@@ -25,7 +25,7 @@ class Wallet extends Model
         'operator_id',
         'wallet_number',
         'balance',
-        'currency',
+        'currency_id',
         'status',
     ];
 
@@ -66,6 +66,14 @@ class Wallet extends Model
     }
 
     /**
+     * Get the currency that owns the wallet.
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
+    }
+
+    /**
      * Scope a query to only include active wallets.
      */
     public function scopeActive($query)
@@ -94,6 +102,7 @@ class Wallet extends Model
      */
     public function getFormattedBalanceAttribute(): string
     {
-        return number_format((float) $this->balance, 2) . ' ' . $this->currency;
+        $currencySymbol = $this->currency ? $this->currency->symbol : '';
+        return number_format((float) $this->balance, 2) . ' ' . $currencySymbol;
     }
 }

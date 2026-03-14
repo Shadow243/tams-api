@@ -29,4 +29,12 @@ class Country extends Model
     {
         return $this->hasMany(Branch::class);
     }
+
+    /**
+     * Get the currencies for the country.
+     */
+    public function currencies(): HasMany
+    {
+        return $this->hasMany(Currency::class);
+    }
 }

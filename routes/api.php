@@ -12,11 +12,13 @@ use App\Http\Controllers\Api\Configs\OperatorController;
 use App\Http\Controllers\Api\Configs\TransactionTypeController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\Configs\WalletController;
 use App\Http\Controllers\Api\Users\UserController;
+use App\Http\Resources\Api\UserResource;
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    return new UserResource($request->user());
 })->middleware('auth:api');
 
 Route::get('/healthcheck', function () {
@@ -46,6 +48,18 @@ Route::prefix('auth')->name('auth.')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('me', [LogoutController::class, 'me'])->name('me');
+    
+    // Currencies Routes
+    Route::get('currencies', [CurrencyController::class, 'index'])->middleware('permission:lire_devises')->name('currencies.index');
+    Route::get('currencies/all', [CurrencyController::class, 'all'])->name('currencies.all'); // For dropdowns (no pagination)
+    Route::get('currencies/active', [CurrencyController::class, 'active'])->name('currencies.active'); // Active currencies for dropdowns
+    Route::get('currencies/default', [CurrencyController::class, 'default'])->name('currencies.default');
+    Route::post('currencies', [CurrencyController::class, 'store'])->middleware('permission:creer_devises')->name('currencies.store');
+    Route::get('currencies/{code}', [CurrencyController::class, 'show'])->middleware('permission:lire_devises')->name('currencies.show');
+    Route::put('currencies/{code}', [CurrencyController::class, 'update'])->middleware('permission:editer_devises')->name('currencies.update');
+    Route::patch('currencies/{code}', [CurrencyController::class, 'update'])->middleware('permission:editer_devises');
+    Route::delete('currencies/{code}', [CurrencyController::class, 'destroy'])->middleware('permission:supprimer_devises')->name('currencies.destroy');
+    
     Route::name('configs.')->group(function () {
         // Countries Routes
         Route::get('countries', [CountryController::class, 'index'])->middleware('permission:lire_pays')->name('countries.index');

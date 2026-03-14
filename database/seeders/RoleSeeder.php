@@ -38,6 +38,10 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'gerer transactions',
                 'module_name' => $modules[0]
+            ],
+            [
+                'name' => 'gerer clients',
+                'module_name' => $modules[0]
             ]
         ];
 

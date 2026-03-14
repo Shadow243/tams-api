@@ -108,6 +108,7 @@ class FeeRuleController extends Controller
             'transaction_type_id' => 'required|integer|exists:transaction_types,id',
             'operator_id' => 'nullable|integer|exists:operators,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
+            'amount' => 'nullable|numeric|min:0',
         ]);
 
         $feeRule = $this->service->getApplicableFeeRule(
@@ -122,7 +123,21 @@ class FeeRuleController extends Controller
 
         $feeRule->load(['transactionType', 'operator', 'branch']);
 
-        return $this->sendData(new FeeRuleResource($feeRule));
+        // Calculate fee if amount is provided
+        $calculatedFee = null;
+        if ($request->has('amount')) {
+            $amount = (float) $request->input('amount');
+            $calculatedFee = $this->service->calculateFee($feeRule, $amount);
+        }
+
+        $data = new FeeRuleResource($feeRule);
+        $response = $data->toArray($request);
+        
+        if ($calculatedFee !== null) {
+            $response['calculated_fee'] = $calculatedFee;
+        }
+
+        return $this->sendData($response);
     }
 
     /**

@@ -25,6 +25,8 @@ class Transaction extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
+        'id',
         'reference',
         'transaction_type_id',
         'branch_id',
@@ -36,6 +38,8 @@ class Transaction extends Model
         'gross_amount',
         'fee_amount',
         'net_amount',
+        'currency_code',
+        'currency_id',
         'fee_rule_id',
         'fee_mode_applied',
         'fee_snapshot',
@@ -116,6 +120,14 @@ class Transaction extends Model
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    /**
+     * Get the currency for the transaction.
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
     }
 
     /**

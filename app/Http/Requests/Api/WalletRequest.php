@@ -45,10 +45,10 @@ class WalletRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                // Unique constraint: wallet_number + operator_id + currency must be unique
+                // Unique constraint: wallet_number + operator_id + currency_id must be unique
                 Rule::unique('wallets', 'wallet_number')
                     ->where('operator_id', $this->input('operator_id'))
-                    ->where('currency', $this->input('currency', 'USD'))
+                    ->where('currency_id', $this->input('currency_id'))
                     ->ignore($walletId),
             ],
             'balance' => [
@@ -57,10 +57,10 @@ class WalletRequest extends FormRequest
                 'min:0',
                 'max:999999999999999999.99',
             ],
-            'currency' => [
-                'nullable',
-                'string',
-                'max:10',
+            'currency_id' => [
+                'required',
+                'integer',
+                'exists:currencies,id',
             ],
             'status' => [
                 'nullable',
@@ -82,7 +82,7 @@ class WalletRequest extends FormRequest
             'operator_id' => __('wallets.form.operator'),
             'wallet_number' => __('wallets.form.wallet_number'),
             'balance' => __('wallets.form.balance'),
-            'currency' => __('wallets.form.currency'),
+            'currency_id' => __('wallets.form.currency'),
             'status' => __('wallets.form.status'),
         ];
     }
@@ -98,6 +98,7 @@ class WalletRequest extends FormRequest
             'wallet_number.unique' => __('wallets.validation.wallet_number_unique'),
             'branch_id.exists' => __('wallets.validation.branch_exists'),
             'operator_id.exists' => __('wallets.validation.operator_exists'),
+            'currency_id.exists' => __('wallets.validation.currency_exists'),
         ];
     }
 }

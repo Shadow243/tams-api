@@ -50,7 +50,7 @@ class TransactionRequest extends FormRequest
             ],
             'customer_id' => [
                 'nullable',
-                'uuid',
+                // 'uuid',
                 'exists:customers,id',
             ],
             'wallet_id' => [

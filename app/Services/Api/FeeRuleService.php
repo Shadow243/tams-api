@@ -189,6 +189,43 @@ final class FeeRuleService
     }
 
     /**
+     * Calculate fee amount based on fee rule and transaction amount
+     * @param FeeRule $feeRule
+     * @param float $amount
+     * @return float
+     */
+    public function calculateFee(FeeRule $feeRule, float $amount): float
+    {
+        $calculatedFee = 0;
+
+        switch ($feeRule->fee_mode->value) {
+            case 'fixed':
+                $calculatedFee = (float) $feeRule->value;
+                break;
+            
+            case 'percentage':
+                $calculatedFee = ($amount * (float) $feeRule->value) / 100;
+                break;
+            
+            default:
+                $calculatedFee = 0;
+                break;
+        }
+
+        // Apply min_fee constraint
+        if ($feeRule->min_fee && $calculatedFee < $feeRule->min_fee) {
+            $calculatedFee = (float) $feeRule->min_fee;
+        }
+
+        // Apply max_fee constraint
+        if ($feeRule->max_fee && $calculatedFee > $feeRule->max_fee) {
+            $calculatedFee = (float) $feeRule->max_fee;
+        }
+
+        return round($calculatedFee, 2);
+    }
+
+    /**
      * Export fee rules to PDF
      * @param Request $request
      * @return mixed

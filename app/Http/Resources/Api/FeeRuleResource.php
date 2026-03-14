@@ -18,11 +18,17 @@ class FeeRuleResource extends JsonResource
             'id' => $this->id,
             'uuid' => $this->uuid,
             'transaction_type_id' => $this->transaction_type_id,
-            'transaction_type' => new TransactionTypeResource($this->whenLoaded('transactionType')),
+            'transaction_type' => $this->relationLoaded('transactionType') && $this->transactionType
+                ? new TransactionTypeResource($this->transactionType)
+                : null,
             'operator_id' => $this->operator_id,
-            'operator' => new OperatorResource($this->whenLoaded('operator')),
+            'operator' => $this->relationLoaded('operator') && $this->operator
+                ? new OperatorResource($this->operator)
+                : null,
             'branch_id' => $this->branch_id,
-            'branch' => new BranchResource($this->whenLoaded('branch')),
+            'branch' => $this->relationLoaded('branch') && $this->branch
+                ? new BranchResource($this->branch)
+                : null,
             'fee_mode' => $this->fee_mode->value,
             'fee_mode_label' => $this->fee_mode->label(),
             'value' => $this->value,

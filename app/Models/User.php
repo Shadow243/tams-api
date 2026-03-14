@@ -46,7 +46,8 @@ final class User extends Authenticatable implements HasLocalePreference
         'country_code',
         'avatar',
         'active',
-        'timezone'
+        'timezone',
+        'branch_id'
     ];
 
     /**
@@ -141,5 +142,13 @@ final class User extends Authenticatable implements HasLocalePreference
         return Attribute::make(
             get: fn () => ! is_null($this->phone_number) ? '+' . $this->country_code . $this->phone_number : null
         );
+    }
+
+    /**
+     * Get the branch that the user belongs to.
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

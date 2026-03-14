@@ -63,6 +63,7 @@ return [
         'balance' => 'Balance',
         'balancePlaceholder' => '0.00',
         'currency' => 'Currency',
+        'selectCurrency' => 'Select a currency',
         'currencyPlaceholder' => 'USD',
         'status' => 'Status',
         'cancel' => 'Cancel',
@@ -75,5 +76,6 @@ return [
         'wallet_number_unique' => 'This wallet number already exists',
         'branch_exists' => 'The selected branch does not exist',
         'operator_exists' => 'The selected operator does not exist',
+        'currency_exists' => 'The selected currency does not exist',
     ],
 ];

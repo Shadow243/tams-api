@@ -8,6 +8,7 @@ use App\Enums\WalletStatus;
 use App\Models\Wallet;
 use App\Models\Branch;
 use App\Models\Operator;
+use App\Models\Currency;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,14 +30,15 @@ class WalletFactory extends Factory
      */
     public function definition(): array
     {
-        $currencies = ['USD', 'EUR', 'CDF', 'GBP'];
+        // Get a random active currency, or create one if none exists
+        $currency = Currency::where('is_active', true)->inRandomOrder()->first();
         
         return [
             'branch_id' => Branch::factory(),
             'operator_id' => Operator::factory(),
             'wallet_number' => fake()->unique()->numerify('##########'),
             'balance' => fake()->randomFloat(2, 0, 50000),
-            'currency' => fake()->randomElement($currencies),
+            'currency_id' => $currency?->id ?? Currency::first()?->id ?? 1,
             'status' => fake()->randomElement(WalletStatus::cases()),
         ];
     }
@@ -74,10 +76,10 @@ class WalletFactory extends Factory
     /**
      * Indicate that the wallet has a specific currency.
      */
-    public function currency(string $currency): static
+    public function currency(int $currencyId): static
     {
         return $this->state(fn (array $attributes) => [
-            'currency' => $currency,
+            'currency_id' => $currencyId,
         ]);
     }
 }

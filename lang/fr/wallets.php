@@ -63,6 +63,7 @@ return [
         'balance' => 'Solde',
         'balancePlaceholder' => '0.00',
         'currency' => 'Devise',
+        'selectCurrency' => 'Sélectionner une devise',
         'currencyPlaceholder' => 'USD',
         'status' => 'Statut',
         'cancel' => 'Annuler',
@@ -75,5 +76,6 @@ return [
         'wallet_number_unique' => 'Ce numéro de portefeuille existe déjà',
         'branch_exists' => 'L\'agence sélectionnée n\'existe pas',
         'operator_exists' => 'L\'opérateur sélectionné n\'existe pas',
+        'currency_exists' => 'La devise sélectionnée n\'existe pas',
     ],
 ];

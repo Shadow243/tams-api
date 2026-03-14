@@ -15,18 +15,18 @@ class OperatorResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'country_id' => $this->country_id,
-            'country' => $this->whenLoaded('country', fn() => [
-                'id' => $this->country->id,
-                'name' => $this->country->name,
-                'code' => $this->country->code,
-            ]),
-            'logo' => $this->logo,
+            'id' => $this->id ?? null,
+            'name' => $this->name ?? null,
+            'country_id' => $this->country_id ?? null,
+            'country' => $this->relationLoaded('country') && $this->country ? [
+                'id' => $this->country->id ?? null,
+                'name' => $this->country->name ?? null,
+                'code' => $this->country->code ?? null,
+            ] : null,
+            'logo' => $this->logo ?? null,
             'logo_url' => $this->logo ? $this->mediaUrl('logo') : null,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->created_at ?? null,
+            'updated_at' => $this->updated_at ?? null,
         ];
     }
 }

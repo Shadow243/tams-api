@@ -185,7 +185,7 @@
                     <td>{{ $wallet->branch->name ?? 'N/A' }}</td>
                     <td>{{ $wallet->operator->name ?? 'N/A' }}</td>
                     <td class="text-right">{{ number_format($wallet->balance, 2) }}</td>
-                    <td class="text-center">{{ $wallet->currency }}</td>
+                    <td class="text-center">{{ $wallet->currency->code ?? 'N/A' }}</td>
                     <td class="text-center">
                         <span class="status-badge {{ $wallet->status->value === 'active' ? 'status-active' : 'status-inactive' }}">
                             {{ $wallet->status->value === 'active' ? __('wallets.status.active') : __('wallets.status.inactive') }}

@@ -31,9 +31,12 @@ final class WalletService
             $data['balance'] = 0;
         }
 
-        // Set default currency if not provided
-        if (!isset($data['currency'])) {
-            $data['currency'] = 'USD';
+        // Set default currency_id if not provided (use default currency)
+        if (!isset($data['currency_id'])) {
+            $defaultCurrency = \App\Models\Currency::where('is_default', true)->first();
+            if ($defaultCurrency) {
+                $data['currency_id'] = $defaultCurrency->id;
+            }
         }
 
         return Wallet::create($data);
@@ -74,14 +77,17 @@ final class WalletService
         $operatorId = $request->input('operator_id');
 
         $query = Wallet::query()
-            ->with(['branch', 'operator'])
-            ->select(['id', 'uuid', 'branch_id', 'operator_id', 'wallet_number', 'balance', 'currency', 'status', 'created_at', 'updated_at']);
+            ->with(['branch', 'operator', 'currency'])
+            ->select(['id', 'uuid', 'branch_id', 'operator_id', 'wallet_number', 'balance', 'currency_id', 'status', 'created_at', 'updated_at']);
 
         // Apply search filter
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('wallet_number', 'like', '%' . addcslashes($search, '%_\\') . '%')
-                  ->orWhere('currency', 'like', '%' . addcslashes($search, '%_\\') . '%');
+                  ->orWhereHas('currency', function ($q) use ($search) {
+                      $q->where('code', 'like', '%' . addcslashes($search, '%_\\') . '%')
+                        ->orWhere('name', 'like', '%' . addcslashes($search, '%_\\') . '%');
+                  });
             });
         }
 
@@ -150,14 +156,17 @@ final class WalletService
      */
     public function exportToPDF(Request $request)
     {
-        $query = Wallet::query()->with(['branch', 'operator']);
+        $query = Wallet::query()->with(['branch', 'operator', 'currency']);
 
         // Apply same filters as getWallets method
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('wallet_number', 'like', "%{$search}%")
-                    ->orWhere('currency', 'like', "%{$search}%");
+                    ->orWhereHas('currency', function ($q) use ($search) {
+                        $q->where('code', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%");
+                    });
             });
         }
 

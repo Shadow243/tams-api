@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained('branches')->onDelete('restrict');
             $table->foreignId('destination_branch_id')->nullable()->constrained('branches')->onDelete('restrict');
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('customer_id')->nullable()->constrained('customers')->onDelete('restrict');
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('restrict');
             $table->foreignId('wallet_id')->nullable()->constrained('wallets')->onDelete('restrict');
             
             // Customer Info

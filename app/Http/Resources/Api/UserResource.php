@@ -29,8 +29,11 @@ class UserResource extends JsonResource
             'locale' => $this->locale,
             'timezone' => $this->timezone,
             'active' => $this->active,
+            'branch_id' => $this->branch_id,
             'avatar' => $this->avatar,
             'avatar_url' => $this->avatar ? $this->mediaUrl('avatar') : null,
+            'permissions' => $this->getAllPermissions()->pluck('name')->toArray(),
+            'roles' => $this->getRoleNames()->toArray(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

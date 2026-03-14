@@ -49,6 +49,8 @@ final class TransactionService
                 $data['fee_snapshot'] = $feeCalculation['fee_snapshot'];
             }
 
+            $data['id'] = (new Transaction)->newUniqueId();
+
             // Calculate net amount
             $data['net_amount'] = $data['gross_amount'] - $data['fee_amount'];
 
@@ -112,12 +114,14 @@ final class TransactionService
                 'user',
                 'customer',
                 'wallet',
-                'feeRule'
+                'feeRule',
+                'currency',
             ])
             ->select([
                 'id', 'uuid', 'reference', 'transaction_type_id', 'branch_id',
                 'destination_branch_id', 'user_id', 'customer_id', 'wallet_id',
                 'customer_phone', 'gross_amount', 'fee_amount', 'net_amount',
+                'currency_id', 'currency_code',
                 'fee_rule_id', 'fee_mode_applied', 'parent_transaction_id',
                 'withdrawal_code', 'expires_at', 'status', 'created_at', 'updated_at'
             ]);
