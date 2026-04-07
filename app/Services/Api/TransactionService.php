@@ -98,15 +98,39 @@ final class TransactionService
     public function getTransactions(Request $request)
     {
         $perPage = min((int) $request->input('per_page', 15), 100);
-        $search = $request->input('search');
+
+        return $this->buildTransactionQuery($request)->latest()->paginate($perPage);
+    }
+
+    /**
+     * Get all transactions matching the request filters (no pagination).
+     * Use for exports where the full result set is needed.
+     *
+     * @param Request $request
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllTransactions(Request $request): \Illuminate\Support\Collection
+    {
+        return $this->buildTransactionQuery($request)->latest()->get();
+    }
+
+    /**
+     * Build a filtered Transaction query from the request without applying pagination.
+     *
+     * @param Request $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function buildTransactionQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $search            = $request->input('search');
         $transactionTypeId = $request->input('transaction_type_id');
-        $branchId = $request->input('branch_id');
-        $userId = $request->input('user_id');
-        $customerId = $request->input('customer_id');
-        $customerPhone = $request->input('customer_phone');
-        $status = $request->input('status');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $branchId          = $request->input('branch_id');
+        $userId            = $request->input('user_id');
+        $customerId        = $request->input('customer_id');
+        $customerPhone     = $request->input('customer_phone');
+        $status            = $request->input('status');
+        $startDate         = $request->input('start_date');
+        $endDate           = $request->input('end_date');
 
         $query = Transaction::query()
             ->with([
@@ -128,7 +152,6 @@ final class TransactionService
                 'withdrawal_code', 'expires_at', 'status', 'created_at', 'updated_at'
             ]);
 
-        // Apply search filter
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('reference', 'like', '%' . addcslashes($search, '%_\\') . '%')
@@ -145,12 +168,10 @@ final class TransactionService
             });
         }
 
-        // Apply transaction type filter
         if ($transactionTypeId) {
             $query->where('transaction_type_id', $transactionTypeId);
         }
 
-        // Apply branch filter
         if ($branchId) {
             $query->where(function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
@@ -158,32 +179,27 @@ final class TransactionService
             });
         }
 
-        // Apply user filter
         if ($userId) {
             $query->where('user_id', $userId);
         }
 
-        // Apply customer filter
         if ($customerId) {
             $query->where('customer_id', $customerId);
         }
 
-        // Apply customer phone filter
         if ($customerPhone) {
             $query->where('customer_phone', $customerPhone);
         }
 
-        // Apply status filter
         if ($status) {
             $query->where('status', $status);
         }
 
-        // Apply date range filter
         if ($startDate && $endDate) {
             $query->dateRange($startDate, $endDate);
         }
 
-        return $query->latest()->paginate($perPage);
+        return $query;
     }
 
     /**

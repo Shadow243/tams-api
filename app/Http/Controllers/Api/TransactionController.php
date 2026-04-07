@@ -268,12 +268,20 @@ class TransactionController extends Controller
             'user',
             'customer',
             'wallet',
-            'feeRule'
+            'feeRule',
+            'currency',
         ]);
 
         $pdf = app('dompdf.wrapper');
+
+        $logoPath = public_path('images/logo.png');
+        $logoSrc  = file_exists($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
+
         $pdf->loadView('pdf.transaction-receipt', [
             'transaction' => $transaction,
+            'logoSrc'     => $logoSrc,
         ])->setPaper([0, 0, 226, 566], 'portrait'); // 80mm x 200mm thermal paper
 
         return $pdf->download('receipt-' . $transaction->reference . '.pdf');
@@ -284,12 +292,40 @@ class TransactionController extends Controller
      */
     public function exportPDF(Request $request)
     {
-        $transactions = $this->service->getTransactions($request)->items();
+        // Fetch ALL matching transactions (no pagination) so totals are accurate
+        $transactions = $this->service->getAllTransactions($request);
+
+        // Group by currency so totals are never mixed across currencies.
+        // We use currency_id (the FK) as the group key — authoritative and never stale.
+        // For display we resolve: currency relation > currency_code column > 'N/A'.
+        $groups = $transactions
+            ->groupBy(fn ($t) => $t->currency_id ?? ('code:' . ($t->currency_code ?: 'N/A')))
+            ->map(fn ($g) => [
+                'currency_code' => $g->first()->currency?->code
+                                ?? $g->first()->currency_code
+                                ?: 'N/A',
+                'currency_name' => $g->first()->currency?->name ?? null,
+                'transactions'  => $g->values(),
+                'gross'         => $g->sum('gross_amount'),
+                'fee'           => $g->sum('fee_amount'),
+                'net'           => $g->sum('net_amount'),
+                'count'         => $g->count(),
+            ])
+            ->values();
+
+        // Embed logo as base64 so dompdf can render it without HTTP requests
+        $logoPath = public_path('images/logo.png');
+        $logoSrc  = file_exists($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
 
         $pdf = app('dompdf.wrapper');
+        $pdf->setPaper('A4', 'landscape');
         $pdf->loadView('pdf.transactions', [
-            'transactions' => $transactions,
-            'filters' => $request->all(),
+            'groups'     => $groups,
+            'totalCount' => $transactions->count(),
+            'filters'    => $request->all(),
+            'logoSrc'    => $logoSrc,
         ]);
 
         return $pdf->download('transactions-' . date('Y-m-d-H-i-s') . '.pdf');
