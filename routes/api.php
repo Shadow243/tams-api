@@ -122,6 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('transactions')->name('transactions.')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->middleware('permission:lire_transactions')->name('index');
         Route::get('/statistics', [TransactionController::class, 'statistics'])->middleware('permission:lire_transactions')->name('statistics');
+        Route::get('/dashboard/statistics', [TransactionController::class, 'dashboardStatistics'])->middleware('permission:lire_transactions')->name('dashboard.statistics');
         Route::get('/export/pdf', [TransactionController::class, 'exportPDF'])->middleware('permission:lire_transactions')->name('exportPDF');
         Route::post('/verify-withdrawal', [TransactionController::class, 'verifyWithdrawalCode'])->name('verify-withdrawal');
         Route::post('/', [TransactionController::class, 'store'])->middleware('permission:creer_transactions')->name('store');

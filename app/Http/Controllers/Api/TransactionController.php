@@ -243,6 +243,16 @@ class TransactionController extends Controller
     }
 
     /**
+     * Get dashboard statistics
+     */
+    public function dashboardStatistics(Request $request)
+    {
+        $statistics = $this->service->getDashboardStatistics($request);
+
+        return $this->sendData($statistics);
+    }
+
+    /**
      * Generate receipt for a transaction
      */
     public function receipt(string $transaction)

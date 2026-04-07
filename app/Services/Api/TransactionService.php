@@ -6,6 +6,7 @@ namespace App\Services\Api;
 
 use App\Enums\FeeModeApplied;
 use App\Enums\TransactionStatus;
+use App\Http\Resources\Api\TransactionResource;
 use App\Models\FeeRule;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -317,6 +318,157 @@ final class TransactionService
                 'failed' => $query->clone()->where('status', TransactionStatus::FAILED->value)->count(),
                 'expired' => $query->clone()->where('status', TransactionStatus::EXPIRED->value)->count(),
             ],
+        ];
+    }
+
+    /**
+     * Get dashboard statistics with extended metrics
+     * @param Request $request
+     * @return array
+     */
+    public function getDashboardStatistics(Request $request): array
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $branchId = $request->input('branch_id');
+        $currencyId = $request->input('currency_id');
+        $transactionTypeId = $request->input('transaction_type_id');
+
+        $query = Transaction::query();
+
+        if ($startDate && $endDate) {
+            $query->dateRange($startDate, $endDate);
+        }
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        if ($currencyId) {
+            $query->where('currency_id', $currencyId);
+        }
+
+        if ($transactionTypeId) {
+            $query->where('transaction_type_id', $transactionTypeId);
+        }
+
+        // Basic stats
+        $totalTransactions = $query->count();
+        $totalAmount = $query->sum('gross_amount');
+        $totalFees = $query->sum('fee_amount');
+        $totalNet = $query->sum('net_amount');
+
+        // Average transaction value
+        $averageAmount = $totalTransactions > 0 ? $totalAmount / $totalTransactions : 0;
+
+        // Status breakdown
+        $byStatus = [
+            'pending' => $query->clone()->pending()->count(),
+            'available' => $query->clone()->available()->count(),
+            'completed' => $query->clone()->completed()->count(),
+            'cancelled' => $query->clone()->where('status', TransactionStatus::CANCELLED->value)->count(),
+            'failed' => $query->clone()->where('status', TransactionStatus::FAILED->value)->count(),
+            'expired' => $query->clone()->where('status', TransactionStatus::EXPIRED->value)->count(),
+        ];
+
+        // Success rate
+        $successfulTransactions = $byStatus['completed'] + $byStatus['available'];
+        $successRate = $totalTransactions > 0 ? ($successfulTransactions / $totalTransactions) * 100 : 0;
+
+        // Transactions by type
+        $byType = Transaction::query()
+            ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->selectRaw('transaction_type_id, COUNT(*) as count, SUM(gross_amount) as total_amount')
+            ->groupBy('transaction_type_id')
+            ->with('transactionType:id,name,code')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type_id' => $item->transaction_type_id,
+                    'type_name' => $item->transactionType->name ?? 'N/A',
+                    'type_code' => $item->transactionType->code ?? 'N/A',
+                    'count' => $item->count,
+                    'total_amount' => $item->total_amount,
+                ];
+            });
+
+        // Transactions by branch
+        $byBranch = Transaction::query()
+            ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+            ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+            ->selectRaw('branch_id, COUNT(*) as count, SUM(gross_amount) as total_amount')
+            ->groupBy('branch_id')
+            ->with('branch:id,name,code')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'branch_id' => $item->branch_id,
+                    'branch_name' => $item->branch->name ?? 'N/A',
+                    'branch_code' => $item->branch->code ?? 'N/A',
+                    'count' => $item->count,
+                    'total_amount' => $item->total_amount,
+                ];
+            });
+
+        // Daily trend – grouped by date + currency (max 30 distinct dates)
+        $trendDates = Transaction::query()
+            ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+            ->selectRaw('DATE(created_at) as d')
+            ->groupBy('d')
+            ->orderBy('d', 'desc')
+            ->limit(30)
+            ->pluck('d');
+
+        $trendQuery = Transaction::query()
+            ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+            ->whereIn(DB::raw('DATE(created_at)'), $trendDates)
+            ->selectRaw('DATE(created_at) as date, currency_id, currency_code, COUNT(*) as count, SUM(gross_amount) as total_amount, SUM(fee_amount) as total_fees')
+            ->groupBy('date', 'currency_id', 'currency_code')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->map(fn($item) => [
+                'date'          => $item->date,
+                'currency_id'   => $item->currency_id,
+                'currency_code' => $item->currency_code,
+                'count'         => (int) $item->count,
+                'total_amount'  => (float) $item->total_amount,
+                'total_fees'    => (float) $item->total_fees,
+            ]);
+
+        // Recent transactions
+        $recentTransactions = Transaction::query()
+            ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+            ->with(['branch:id,name,code,status', 'transactionType:id,name,code', 'wallet:id,wallet_number,currency_id,status'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return [
+            'overview' => [
+                'total_transactions' => $totalTransactions,
+                'total_amount' => $totalAmount,
+                'total_fees' => $totalFees,
+                'total_net' => $totalNet,
+                'average_amount' => round($averageAmount, 2),
+                'success_rate' => round($successRate, 2),
+            ],
+            'by_status' => $byStatus,
+            'by_type' => $byType,
+            'by_branch' => $byBranch,
+            'trend' => $trendQuery,
+            'recent_transactions' => TransactionResource::collection($recentTransactions),
         ];
     }
 }

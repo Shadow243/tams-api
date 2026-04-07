@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    // Page
+    'title'       => 'Dashboard',
+    'description' => 'Global overview of the transfer system',
+
+    // KPI labels
+    'total'             => 'Total',
+    'total_transactions' => 'Transactions',
+    'total_amount'      => 'Total Amount',
+    'total_fees'        => 'Total Fees',
+    'total_net'         => 'Net Amount',
+    'average_amount'    => 'Average Amount',
+    'success_rate'      => 'Success Rate',
+    'gross'             => 'Gross',
+    'fees'              => 'Fees',
+    'net'               => 'Net',
+    'rate'              => 'Rate',
+    'average'           => 'Avg',
+    'amount'            => 'Amount',
+
+    // Sections
+    'by_status'           => 'Status Breakdown',
+    'trend'               => 'Transaction Trends',
+    'by_type'             => 'By Transaction Type',
+    'by_branch'           => 'By Branch',
+    'recent_transactions' => 'Recent Transactions',
+    'view_all'            => 'View All',
+
+    // Filters
+    'filter' => [
+        'all_branches'   => 'All Branches',
+        'all_currencies' => 'All Currencies',
+        'all_types'      => 'All Types',
+    ],
+
+    // Periods
+    'period' => [
+        'today'      => 'Today',
+        'yesterday'  => 'Yesterday',
+        'week'       => 'This Week',
+        'month'      => 'This Month',
+        'last_month' => 'Last Month',
+        'year'       => 'This Year',
+        'all'        => 'All Time',
+        'custom'     => 'Custom Range',
+    ],
+
+    // UI States
+    'filters_active' => 'active filter(s)',
+    'reset_filters'  => 'Reset',
+    'no_data'        => 'No data available',
+    'no_trend_data'  => 'No trend data available',
+    'no_recent'      => 'No recent transactions',
+    'no_data_title'  => 'No data available',
+    'no_data_desc'   => 'Adjust the filters or check your connection.',
+    'retry'          => 'Retry',
+];
