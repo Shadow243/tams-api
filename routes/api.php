@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\Configs\WalletController;
 use App\Http\Controllers\Api\Users\UserController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Resources\Api\UserResource;
 
 Route::get('/user', function (Request $request) {
@@ -159,5 +160,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs')->name('update');
         Route::patch('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs');
         Route::delete('{user}', [UserController::class, 'destroy'])->middleware('permission:supprimer_utilisateurs')->name('destroy');
+    });
+
+    // ── Notifications ──────────────────────────────────────────────────────
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/clear-read', [NotificationController::class, 'clearRead'])->name('clear-read');
+        Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
     });
 });
