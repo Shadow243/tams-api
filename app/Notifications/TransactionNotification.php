@@ -7,6 +7,7 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\Transaction;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -22,10 +23,10 @@ final class TransactionNotification extends Notification
         public readonly NotificationType $notificationType,
     ) {}
 
-    /** Deliver only via the database channel */
+    /** Deliver via database (persistent) + broadcast (real-time) */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /** Payload stored in the `data` JSON column */
@@ -45,6 +46,27 @@ final class TransactionNotification extends Notification
             'status'         => $this->transaction->status->value,
             'branch_id'      => $this->transaction->branch_id,
         ];
+    }
+
+    /**
+     * Broadcast payload — `notification_type` avoids collision with Laravel's own `type` key.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'notification_type' => $this->notificationType->value,
+            'title'             => $this->notificationType->label(),
+            'body'              => $this->buildBody(),
+            'icon'              => $this->notificationType->icon(),
+            'color'             => $this->notificationType->color(),
+            'resource_type'     => 'transaction',
+            'resource_id'       => $this->transaction->uuid,
+            'reference'         => $this->transaction->reference,
+            'amount'            => (float) $this->transaction->gross_amount,
+            'currency_code'     => $this->transaction->currency_code,
+            'status'            => $this->transaction->status->value,
+            'branch_id'         => $this->transaction->branch_id,
+        ]);
     }
 
     private function buildBody(): string
