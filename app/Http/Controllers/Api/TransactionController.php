@@ -20,6 +20,14 @@ class TransactionController extends Controller
     public function __construct(private TransactionService $service){}
     
     /**
+     * Find transaction by ID or UUID
+     */
+    private function findTransaction(string $identifier): ?Transaction
+    {
+        return Transaction::where('uuid', $identifier)->orWhere('id', $identifier)->first();
+    }
+    
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -57,8 +65,18 @@ class TransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Transaction $transaction)
+    public function show(string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
+        if (!$transaction) {
+            return $this->sendError(
+                __('messages.transaction_not_found'),
+                404
+            );
+        }
+
         $transaction->load([
             'transactionType',
             'branch',
@@ -77,9 +95,12 @@ class TransactionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(TransactionRequest $request, Transaction $transaction)
+    public function update(TransactionRequest $request, string $transaction)
     {
-        if (!$transaction->canBeModified()) {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
+        if (!$transaction) {
             return $this->sendError(
                 __('messages.transaction_cannot_be_modified'),
                 403
@@ -108,8 +129,11 @@ class TransactionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Transaction $transaction)
+    public function destroy(string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
         if (!$transaction->canBeCancelled()) {
             return $this->sendError(
                 __('messages.transaction_cannot_be_deleted'),
@@ -128,8 +152,11 @@ class TransactionController extends Controller
     /**
      * Cancel a transaction
      */
-    public function cancel(Transaction $transaction)
+    public function cancel(string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
         try {
             $model = $this->service->cancel($transaction);
             $model->load(['transactionType', 'branch', 'user', 'customer']);
@@ -146,8 +173,11 @@ class TransactionController extends Controller
     /**
      * Complete a transaction
      */
-    public function complete(Transaction $transaction)
+    public function complete(string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
         $model = $this->service->complete($transaction);
         $model->load(['transactionType', 'branch', 'user', 'customer']);
 
@@ -160,8 +190,11 @@ class TransactionController extends Controller
     /**
      * Change transaction status
      */
-    public function changeStatus(Request $request, Transaction $transaction)
+    public function changeStatus(Request $request, string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
         $request->validate([
             'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, TransactionStatus::cases()))]
         ]);
@@ -212,8 +245,11 @@ class TransactionController extends Controller
     /**
      * Generate receipt for a transaction
      */
-    public function receipt(Transaction $transaction)
+    public function receipt(string $transaction)
     {
+        // Accept both UUID and ID
+        $transaction = $this->findTransaction($transaction);
+        
         // Load all necessary relationships
         $transaction->load([
             'transactionType',

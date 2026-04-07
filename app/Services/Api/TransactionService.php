@@ -288,6 +288,7 @@ final class TransactionService
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $branchId = $request->input('branch_id');
+        $currencyId = $request->input('currency_id');
 
         $query = Transaction::query();
 
@@ -297,6 +298,10 @@ final class TransactionService
 
         if ($branchId) {
             $query->where('branch_id', $branchId);
+        }
+
+        if ($currencyId) {
+            $query->where('currency_id', $currencyId);
         }
 
         return [

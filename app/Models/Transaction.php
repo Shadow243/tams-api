@@ -244,7 +244,8 @@ class Transaction extends Model
      */
     public function scopeDateRange(Builder $query, string $startDate, string $endDate): void
     {
-        $query->whereBetween('created_at', [$startDate, $endDate]);
+        $query->whereDate('created_at', '>=', $startDate)
+              ->whereDate('created_at', '<=', $endDate);
     }
 
     /**
