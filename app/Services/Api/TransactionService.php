@@ -126,6 +126,8 @@ final class TransactionService
         $transactionTypeId = $request->input('transaction_type_id');
         $branchId          = $request->input('branch_id');
         $userId            = $request->input('user_id');
+        $completedBy       = $request->input('completed_by');
+        $servedByBranchId  = $request->input('served_by_branch_id');
         $customerId        = $request->input('customer_id');
         $customerPhone     = $request->input('customer_phone');
         $status            = $request->input('status');
@@ -138,6 +140,8 @@ final class TransactionService
                 'branch',
                 'destinationBranch',
                 'user',
+                'completedBy',
+                'servedByBranch',
                 'customer',
                 'wallet',
                 'feeRule',
@@ -145,11 +149,11 @@ final class TransactionService
             ])
             ->select([
                 'id', 'uuid', 'reference', 'transaction_type_id', 'branch_id',
-                'destination_branch_id', 'user_id', 'customer_id', 'wallet_id',
-                'customer_phone', 'gross_amount', 'fee_amount', 'net_amount',
+                'destination_branch_id', 'user_id', 'completed_by', 'served_by_branch_id',
+                'customer_id', 'wallet_id', 'customer_phone', 'gross_amount', 'fee_amount', 'net_amount',
                 'currency_id', 'currency_code',
                 'fee_rule_id', 'fee_mode_applied', 'parent_transaction_id',
-                'withdrawal_code', 'expires_at', 'status', 'created_at', 'updated_at'
+                'withdrawal_code', 'expires_at', 'completed_at', 'status', 'created_at', 'updated_at'
             ]);
 
         if ($search) {
@@ -181,6 +185,14 @@ final class TransactionService
 
         if ($userId) {
             $query->where('user_id', $userId);
+        }
+
+        if ($completedBy) {
+            $query->where('completed_by', $completedBy);
+        }
+
+        if ($servedByBranchId) {
+            $query->where('served_by_branch_id', $servedByBranchId);
         }
 
         if ($customerId) {
@@ -237,7 +249,153 @@ final class TransactionService
      */
     public function complete(Transaction $transaction): Transaction
     {
-        return $this->changeStatus($transaction, TransactionStatus::COMPLETED);
+        return DB::transaction(function () use ($transaction) {
+            // Load necessary relationships
+            $transaction->load(['transactionType', 'branch', 'destinationBranch', 'wallet']);
+            
+            // Update balances based on transaction type
+            $this->updateBalances($transaction);
+            
+            // Get current authenticated user's branch
+            $currentUser = auth()->user();
+            $currentBranchId = $currentUser->branch_id ?? null;
+            
+            // Change status to completed with tracking info
+            $transaction->update([
+                'status' => TransactionStatus::COMPLETED,
+                'completed_by' => $currentUser->id,
+                'served_by_branch_id' => $currentBranchId,
+                'completed_at' => now(),
+            ]);
+            
+            return $transaction->fresh();
+        });
+    }
+
+    /**
+     * Update balances based on transaction type
+     * @param Transaction $transaction
+     * @return void
+     */
+    private function updateBalances(Transaction $transaction): void
+    {
+        $transactionCode = $transaction->transactionType->code;
+        $amount = $transaction->gross_amount;
+        $feeAmount = $transaction->fee_amount;
+        
+        switch ($transactionCode) {
+            case 'cash_deposit_transfer':
+                // Dépôt cash pour retrait ultérieur
+                // Branch source perd du cash
+                if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, -$amount);
+                }
+                break;
+                
+            case 'cash_withdraw_transfer':
+                // Retrait d'un transfert
+                // Branch destination gagne du cash (mais perd le montant donné au client)
+                if ($transaction->destinationBranch) {
+                    $this->updateBranchCash($transaction->destinationBranch, -$amount);
+                }
+                break;
+                
+            case 'wallet_cash_in':
+                // Client envoie wallet → reçoit cash
+                // Wallet perd du virtuel, Branch perd du cash
+                if ($transaction->wallet) {
+                    $this->updateWalletVirtual($transaction->wallet, -$amount);
+                }
+                if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, -($amount - $feeAmount));
+                }
+                break;
+                
+            case 'wallet_cash_out':
+                // Client donne cash → reçoit wallet
+                // Wallet gagne du virtuel, Branch gagne du cash
+                if ($transaction->wallet) {
+                    $this->updateWalletVirtual($transaction->wallet, $amount - $feeAmount);
+                }
+                if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, $amount);
+                }
+                break;
+                
+            case 'tams_deposit':
+                // Dépôt Compte TAMS
+                // Branch gagne du cash
+                if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, $amount);
+                }
+                break;
+                
+            case 'tams_withdraw':
+            case 'tams_debt_withdraw':
+                // Retrait Compte TAMS
+                // Branch perd du cash
+                if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, -$amount);
+                }
+                break;
+                
+            case 'wallet_to_wallet_transfer':
+                // Transfert wallet vers numéro
+                // Wallet source perd du virtuel
+                if ($transaction->wallet) {
+                    $this->updateWalletVirtual($transaction->wallet, -$amount);
+                }
+                break;
+                
+            case 'wallet_receive_only':
+                // Réception wallet simple
+                // Wallet gagne du virtuel
+                if ($transaction->wallet) {
+                    $this->updateWalletVirtual($transaction->wallet, $amount);
+                }
+                break;
+        }
+    }
+
+    /**
+     * Update branch cash balance
+     * @param \App\Models\Branch $branch
+     * @param float $amount
+     * @return void
+     */
+    private function updateBranchCash($branch, float $amount): void
+    {
+        $newBalance = $branch->cash_balance + $amount;
+        
+        // Check for negative balance
+        if ($newBalance < 0) {
+            throw new \Exception(__('Insufficient cash balance in branch. Available: :balance', [
+                'balance' => number_format($branch->cash_balance, 2)
+            ]));
+        }
+        
+        $branch->update(['cash_balance' => $newBalance]);
+    }
+
+    /**
+     * Update wallet virtual balance
+     * @param \App\Models\Wallet $wallet
+     * @param float $amount
+     * @return void
+     */
+    private function updateWalletVirtual($wallet, float $amount): void
+    {
+        $newBalance = $wallet->virtual_balance + $amount;
+        
+        // Check for negative balance
+        if ($newBalance < 0) {
+            throw new \Exception(__('Insufficient virtual balance in wallet :number. Available: :balance', [
+                'number' => $wallet->wallet_number,
+                'balance' => number_format($wallet->virtual_balance, 2)
+            ]));
+        }
+        
+        $wallet->update(['virtual_balance' => $newBalance]);
     }
 
     /**

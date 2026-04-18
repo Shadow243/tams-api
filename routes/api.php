@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\Configs\WalletController;
 use App\Http\Controllers\Api\Users\UserController;
+use App\Http\Controllers\Api\Users\SessionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Resources\Api\UserResource;
 
@@ -32,6 +33,10 @@ Route::get('/healthcheck', function () {
     ];
 });
 
+//TODO: Add filter by user on transactions, customers, etc. (created_by field)
+//TODO: manage wallet balances properly (update balance on transaction completion, prevent transactions that would cause negative balance, etc.)
+//TODO: make receipt printable and downloadable as PDF just after transaction completion, without needing to fetch it again from the server. (return the receipt data in the response of the transaction completion endpoint)
+
 
 Route::get('locales', LocaleController::class)
     ->name('locales');
@@ -44,11 +49,36 @@ Route::get('translations/{locale}', [LocaleController::class, 'getTranslations']
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('login', LoginController::class);
 
-    Route::post('logout', LogoutController::class)->middleware('auth:sanctum')->name('logout');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', LogoutController::class)->name('logout');
+        Route::post('validate-password', [LoginController::class, 'validatePassword'])->name('validate-password');
+    });
 });
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('me', [LogoutController::class, 'me'])->name('me');
+    
+    // User avatar upload (authenticated user only)
+    Route::post('user/avatar', [UserController::class, 'uploadAvatar'])->name('user.upload-avatar');
+    
+    // User settings (authenticated user only)
+    Route::get('user/settings', [UserController::class, 'getSettings'])->name('user.get-settings');
+    Route::put('user/settings', [UserController::class, 'updateSettings'])->name('user.update-settings');
+
+    // Two-Factor Authentication (2FA)
+    Route::prefix('user/2fa')->group(function () {
+        Route::post('enable', [\App\Http\Controllers\Api\Users\TwoFactorController::class, 'enable']);
+        Route::post('confirm', [\App\Http\Controllers\Api\Users\TwoFactorController::class, 'confirm']);
+        Route::post('disable', [\App\Http\Controllers\Api\Users\TwoFactorController::class, 'disable']);
+        Route::post('verify', [\App\Http\Controllers\Api\Users\TwoFactorController::class, 'verify']);
+    });
+
+    // User sessions (active devices)
+    Route::prefix('user/sessions')->group(function () {
+        Route::get('/', [SessionController::class, 'index']);
+        Route::delete('/{id}', [SessionController::class, 'destroy']);
+        Route::delete('/', [SessionController::class, 'destroyOthers']);
+    });
     
     // Currencies Routes
     Route::get('currencies', [CurrencyController::class, 'index'])->middleware('permission:lire_devises')->name('currencies.index');
@@ -158,6 +188,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/export/pdf', [UserController::class, 'exportPDF'])->middleware('permission:lire_utilisateurs')->name('exportPDF');
         Route::get('{user}', [UserController::class, 'show'])->middleware('permission:lire_utilisateurs')->name('show');
         Route::put('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs')->name('update');
+        Route::put('{user}/password', [UserController::class, 'updatePassword'])->name('update-password');
         Route::patch('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs');
         Route::delete('{user}', [UserController::class, 'destroy'])->middleware('permission:supprimer_utilisateurs')->name('destroy');
     });

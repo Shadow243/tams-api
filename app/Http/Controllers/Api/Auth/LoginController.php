@@ -57,4 +57,29 @@ final class LoginController extends Controller
     {
         return $this->sendData(new UserResource(auth()->user()));
     }
+
+    /**
+     * Validate user password
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function validatePassword(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (!$user) {
+            return $this->sendErrorResponse('Unauthorized', 401);
+        }
+
+        $valid = Hash::check($request->password, $user->password);
+
+        return $this->sendData([
+            'valid' => $valid,
+        ]);
+    }
 }

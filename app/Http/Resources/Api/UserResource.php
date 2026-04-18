@@ -30,8 +30,12 @@ class UserResource extends JsonResource
             'timezone' => $this->timezone,
             'active' => $this->active,
             'branch_id' => $this->branch_id,
-            'avatar' => $this->avatar,
-            'avatar_url' => $this->avatar ? $this->mediaUrl('avatar') : null,
+            'avatar' => $this->avatar ? [
+                'full' => $this->mediaUrl('avatar'),
+                'thumbnail' => $this->mediaUrl('avatar'), // Using same URL for both for now
+            ] : null,
+            'settings' => $this->settings ?? [],
+            'two_factor_enabled' => (bool) $this->two_factor_enabled,
             'permissions' => $this->getAllPermissions()->pluck('name')->toArray(),
             'roles' => $this->getRoleNames()->toArray(),
             'created_at' => $this->created_at,

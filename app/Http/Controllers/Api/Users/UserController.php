@@ -98,4 +98,76 @@ class UserController extends Controller
     {
         return $this->userService->exportToPDF($request);
     }
+
+    /**
+     * Update user password.
+     */
+    public function updatePassword(Request $request, User $user)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Verify current password
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return $this->sendErrorResponse(__('messages.current_password_incorrect'), 422);
+        }
+
+        // Update password
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        $user->save();
+
+        return $this->sendMessage(__('messages.password_updated_successfully'));
+    }
+
+    /**
+     * Upload user avatar.
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('avatar')) {
+            $user = $this->userService->updateAvatar($user, $request->file('avatar'));
+        }
+
+        return $this->sendResponse(new UserResource($user), __('messages.avatar_updated_successfully'));
+    }
+
+    /**
+     * Get user settings.
+     */
+    public function getSettings(Request $request)
+    {
+        $user = $request->user();
+        
+        return $this->sendData([
+            'settings' => $user->settings ?? []
+        ]);
+    }
+
+    /**
+     * Update user settings.
+     */
+    public function updateSettings(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'settings' => 'required|array',
+        ]);
+
+        $user->update([
+            'settings' => $request->input('settings')
+        ]);
+
+        return $this->sendResponse([
+            'settings' => $user->fresh()->settings
+        ], __('Settings updated successfully'));
+    }
 }

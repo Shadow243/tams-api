@@ -47,7 +47,11 @@ final class User extends Authenticatable implements HasLocalePreference
         'avatar',
         'active',
         'timezone',
-        'branch_id'
+        'branch_id',
+        'settings',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_enabled',
     ];
 
     /**
@@ -58,6 +62,8 @@ final class User extends Authenticatable implements HasLocalePreference
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -127,6 +133,8 @@ final class User extends Authenticatable implements HasLocalePreference
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active' => 'boolean',
+            'settings' => 'array',
+            'two_factor_enabled' => 'boolean',
             'created_at' => TimezoneAwareDateTime::class,
             'updated_at' => TimezoneAwareDateTime::class,
         ];

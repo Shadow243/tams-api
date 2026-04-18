@@ -58,4 +58,11 @@ return [
     'phone_format_invalid' => 'Phone number format is invalid (example: 237XXXXXXXXX)',
     'phone_already_exists' => 'This phone number already exists',
     'national_id_already_exists' => 'This national ID already exists',
+    'user_created_successfully' => 'User created successfully',
+    'user_updated_successfully' => 'User updated successfully',
+    'user_deleted_successfully' => 'User deleted successfully',
+    'users_deleted_successfully' => ':count users deleted successfully',
+    'avatar_updated_successfully' => 'Avatar updated successfully',
+    'password_updated_successfully' => 'Password updated successfully',
+    'current_password_incorrect' => 'Current password is incorrect',
 ];

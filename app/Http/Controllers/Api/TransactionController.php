@@ -179,12 +179,67 @@ class TransactionController extends Controller
         $transaction = $this->findTransaction($transaction);
         
         $model = $this->service->complete($transaction);
-        $model->load(['transactionType', 'branch', 'user', 'customer']);
+        
+        // Load all relationships needed for receipt
+        $model->load([
+            'transactionType',
+            'branch',
+            'destinationBranch',
+            'user',
+            'completedBy',
+            'servedByBranch',
+            'customer',
+            'wallet',
+            'feeRule',
+            'currency',
+        ]);
+
+        // Prepare receipt data
+        $receiptData = $this->prepareReceiptData($model);
 
         return $this->sendResponse(
-            new TransactionResource($model),
+            [
+                'transaction' => new TransactionResource($model),
+                'receipt' => $receiptData,
+            ],
             __('messages.transaction_completed_successfully')
         );
+    }
+
+    /**
+     * Prepare receipt data for a transaction
+     * @param Transaction $transaction
+     * @return array
+     */
+    private function prepareReceiptData(Transaction $transaction): array
+    {
+        $logoPath = public_path('images/logo.png');
+        $logoSrc  = file_exists($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
+
+        return [
+            'reference' => $transaction->reference,
+            'transaction_type' => $transaction->transactionType?->name,
+            'customer_name' => $transaction->customer?->full_name,
+            'customer_phone' => $transaction->customer_phone,
+            'branch_name' => $transaction->branch?->name,
+            'destination_branch_name' => $transaction->destinationBranch?->name,
+            'wallet_number' => $transaction->wallet?->wallet_number,
+            'gross_amount' => $transaction->gross_amount,
+            'fee_amount' => $transaction->fee_amount,
+            'net_amount' => $transaction->net_amount,
+            'currency_code' => $transaction->currency?->code ?? $transaction->currency_code,
+            'currency_symbol' => $transaction->currency?->symbol,
+            'withdrawal_code' => $transaction->withdrawal_code,
+            'status' => $transaction->status->value,
+            'created_at' => $transaction->created_at?->format('Y-m-d H:i:s'),
+            'created_by' => $transaction->user?->name,
+            'completed_at' => $transaction->completed_at?->format('Y-m-d H:i:s'),
+            'completed_by' => $transaction->completedBy?->name,
+            'served_by_branch' => $transaction->servedByBranch?->name,
+            'logo' => $logoSrc,
+        ];
     }
 
     /**

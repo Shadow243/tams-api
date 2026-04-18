@@ -25,6 +25,7 @@ class Wallet extends Model
         'operator_id',
         'wallet_number',
         'balance',
+        'virtual_balance',
         'currency_id',
         'status',
     ];
@@ -46,6 +47,7 @@ class Wallet extends Model
         return [
             'status' => WalletStatus::class,
             'balance' => 'decimal:2',
+            'virtual_balance' => 'decimal:2',
         ];
     }
 
@@ -98,11 +100,28 @@ class Wallet extends Model
     }
 
     /**
+     * Check if wallet has sufficient virtual balance
+     */
+    public function hasSufficientVirtualBalance(float $amount): bool
+    {
+        return $this->virtual_balance >= $amount;
+    }
+
+    /**
      * Get formatted balance with currency
      */
     public function getFormattedBalanceAttribute(): string
     {
         $currencySymbol = $this->currency ? $this->currency->symbol : '';
         return number_format((float) $this->balance, 2) . ' ' . $currencySymbol;
+    }
+
+    /**
+     * Get formatted virtual balance with currency
+     */
+    public function getFormattedVirtualBalanceAttribute(): string
+    {
+        $currencySymbol = $this->currency ? $this->currency->symbol : '';
+        return number_format((float) $this->virtual_balance, 2) . ' ' . $currencySymbol;
     }
 }

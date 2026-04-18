@@ -35,6 +35,8 @@ class Transaction extends Model
         'branch_id',
         'destination_branch_id',
         'user_id',
+        'completed_by',
+        'served_by_branch_id',
         'customer_id',
         'wallet_id',
         'customer_phone',
@@ -49,6 +51,7 @@ class Transaction extends Model
         'parent_transaction_id',
         'withdrawal_code',
         'expires_at',
+        'completed_at',
         'status',
     ];
 
@@ -74,6 +77,7 @@ class Transaction extends Model
             'fee_snapshot' => 'array',
             'status' => TransactionStatus::class,
             'expires_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -107,6 +111,22 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the user that completed the transaction.
+     */
+    public function completedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by');
+    }
+
+    /**
+     * Get the branch that served the client (completed the transaction).
+     */
+    public function servedByBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'served_by_branch_id');
     }
 
     /**

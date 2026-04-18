@@ -58,4 +58,11 @@ return [
     'phone_format_invalid' => 'Le format du numéro de téléphone est invalide (exemple: 243XXXXXXXXX)',
     'phone_already_exists' => 'Ce numéro de téléphone existe déjà',
     'national_id_already_exists' => 'Ce numéro d\'identité nationale existe déjà',
+    'user_created_successfully' => 'Utilisateur créé avec succès',
+    'user_updated_successfully' => 'Utilisateur mis à jour avec succès',
+    'user_deleted_successfully' => 'Utilisateur supprimé avec succès',
+    'users_deleted_successfully' => ':count utilisateurs supprimés avec succès',
+    'avatar_updated_successfully' => 'Avatar mis à jour avec succès',
+    'password_updated_successfully' => 'Mot de passe mis à jour avec succès',
+    'current_password_incorrect' => 'Le mot de passe actuel est incorrect',
 ];

@@ -23,7 +23,8 @@
         "saloonphp/laravel-http-sender": "*",
         "spatie/laravel-csp": "*",
         "spatie/laravel-deleted-models": "*",
-        "spatie/laravel-permission": "*"
+        "spatie/laravel-permission": "*",
+        "spomky-labs/otphp": "^11.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
