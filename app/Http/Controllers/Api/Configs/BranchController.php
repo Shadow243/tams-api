@@ -87,4 +87,71 @@ class BranchController extends Controller
     {
         return $this->service->exportToPDF($request);
     }
+
+    /**
+     * Update or set branch balances for specific currencies
+     * 
+     * @param Request $request
+     * @param Branch $branch
+     * @return \Illuminate\Http\JsonResponse
+     * 
+     * Expected request format:
+     * {
+     *   "balances": [
+     *     {"currency_code": "USD", "amount": 10000},
+     *     {"currency_code": "EUR", "amount": 5000},
+     *     {"currency_code": "CDF", "amount": 2000000}
+     *   ]
+     * }
+     */
+    public function updateBalances(Request $request, Branch $branch)
+    {
+        $validated = $request->validate([
+            'balances' => 'required|array|min:1',
+            'balances.*.currency_code' => 'required|string|exists:currencies,code',
+            'balances.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        foreach ($validated['balances'] as $balanceData) {
+            $branchBalance = $branch->getOrCreateBalance($balanceData['currency_code']);
+            $branchBalance->update([
+                'cash_balance' => $balanceData['amount']
+            ]);
+        }
+
+        // Reload branch with balances
+        $branch->load(['balances.currency', 'country']);
+
+        return $this->sendResponse(
+            new BranchResource($branch), 
+            __('messages.branch_balances_updated_successfully')
+        );
+    }
+
+    /**
+     * Get branch balances for all currencies
+     * 
+     * @param Branch $branch
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getBalances(Branch $branch)
+    {
+        $branch->load(['balances.currency']);
+
+        $balances = $branch->balances->map(function ($balance) {
+            return [
+                'currency_code' => $balance->currency_code,
+                'currency_name' => $balance->currency->name ?? null,
+                'currency_symbol' => $balance->currency->symbol ?? null,
+                'cash_balance' => (float) $balance->cash_balance,
+                'formatted_balance' => number_format((float) $balance->cash_balance, 2),
+            ];
+        });
+
+        return $this->sendData([
+            'branch_id' => $branch->id,
+            'branch_name' => $branch->name,
+            'balances' => $balances,
+        ]);
+    }
 }

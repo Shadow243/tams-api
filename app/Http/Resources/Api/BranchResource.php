@@ -22,7 +22,21 @@ class BranchResource extends JsonResource
             'country_id' => $this->country_id,
             'country' => new CountryResource($this->whenLoaded('country')),
             'address' => $this->address,
-            'cash_balance' => $this->cash_balance,
+            'cash_balance' => $this->cash_balance, // Legacy field (deprecated, use balances instead)
+            'balances' => $this->whenLoaded('balances', function () {
+                return $this->balances->map(function ($balance) {
+                    return [
+                        'currency_code' => $balance->currency_code,
+                        'currency' => $balance->relationLoaded('currency') ? [
+                            'code' => $balance->currency->code,
+                            'name' => $balance->currency->name,
+                            'symbol' => $balance->currency->symbol,
+                        ] : null,
+                        'cash_balance' => (float) $balance->cash_balance,
+                        'formatted_balance' => number_format((float) $balance->cash_balance, 2),
+                    ];
+                });
+            }),
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'is_active' => $this->isActive(),

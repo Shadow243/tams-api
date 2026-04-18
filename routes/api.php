@@ -34,8 +34,9 @@ Route::get('/healthcheck', function () {
 });
 
 //TODO: Add filter by user on transactions, customers, etc. (created_by field)
-//TODO: manage wallet balances properly (update balance on transaction completion, prevent transactions that would cause negative balance, etc.)
-//TODO: make receipt printable and downloadable as PDF just after transaction completion, without needing to fetch it again from the server. (return the receipt data in the response of the transaction completion endpoint)
+//DONE: manage wallet balances properly (update balance on transaction completion, prevent transactions that would cause negative balance, etc.) ✅
+//DONE: make receipt printable and downloadable as PDF just after transaction completion, without needing to fetch it again from the server. (return the receipt data in the response of the transaction completion endpoint) ✅
+//DONE: multi-currency support for branch cash balances (branch_balances table with currency_code) ✅
 
 
 Route::get('locales', LocaleController::class)
@@ -114,8 +115,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('branches/export/pdf', [BranchController::class, 'exportPDF'])->middleware('permission:lire_branches')->name('branches.exportPDF');
         Route::post('branches', [BranchController::class, 'store'])->middleware('permission:creer_branches')->name('branches.store');
         Route::get('branches/{branch}', [BranchController::class, 'show'])->middleware('permission:lire_branches')->name('branches.show');
+        Route::get('branches/{branch}/balances', [BranchController::class, 'getBalances'])->middleware('permission:lire_branches')->name('branches.balances');
         Route::put('branches/{branch}', [BranchController::class, 'update'])->middleware('permission:editer_branches')->name('branches.update');
         Route::patch('branches/{branch}', [BranchController::class, 'update'])->middleware('permission:editer_branches');
+        Route::put('branches/{branch}/balances', [BranchController::class, 'updateBalances'])->middleware('permission:editer_branches')->name('branches.update-balances');
         Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->middleware('permission:supprimer_branches')->name('branches.destroy');
         Route::patch('branches/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])->middleware('permission:editer_branches')->name('branches.toggle-status');
 

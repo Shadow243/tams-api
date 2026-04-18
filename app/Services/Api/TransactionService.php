@@ -56,6 +56,9 @@ final class TransactionService
             // Calculate net amount
             $data['net_amount'] = $data['gross_amount'] - $data['fee_amount'];
 
+            // Validate balances before creating transaction
+            $this->validateBalancesBeforeCreate($data);
+
             return Transaction::create($data);
         });
     }
@@ -282,74 +285,100 @@ final class TransactionService
         $transactionCode = $transaction->transactionType->code;
         $amount = $transaction->gross_amount;
         $feeAmount = $transaction->fee_amount;
+        $netAmount = $transaction->net_amount;
+        $currencyCode = $transaction->currency_code; // Devise de la transaction
         
         switch ($transactionCode) {
             case 'cash_deposit_transfer':
-                // Dépôt cash pour retrait ultérieur
-                // Branch source perd du cash
+                // Dépôt cash pour retrait ultérieur dans une autre branche
+                // 1. Branch source perd du cash (client a déposé l'argent)
                 if ($transaction->branch) {
-                    $this->updateBranchCash($transaction->branch, -$amount);
+                    $this->updateBranchCash($transaction->branch, -$amount, $currencyCode);
+                }
+                // 2. Branch destination GAGNE du cash (reçoit le transfert)
+                //    Les frais restent à la branche source
+                if ($transaction->destinationBranch) {
+                    $this->updateBranchCash($transaction->destinationBranch, $amount, $currencyCode);
                 }
                 break;
                 
             case 'cash_withdraw_transfer':
-                // Retrait d'un transfert
-                // Branch destination gagne du cash (mais perd le montant donné au client)
+                // Retrait d'un transfert dans la branche destination
+                // Branch destination perd du cash (donne l'argent au bénéficiaire)
+                // Note: L'argent a déjà été crédité lors du dépôt
                 if ($transaction->destinationBranch) {
-                    $this->updateBranchCash($transaction->destinationBranch, -$amount);
+                    $this->updateBranchCash($transaction->destinationBranch, -$amount, $currencyCode);
+                }
+                // OU si c'est la branche actuelle qui effectue le retrait (served_by_branch)
+                else if ($transaction->branch) {
+                    $this->updateBranchCash($transaction->branch, -$amount, $currencyCode);
                 }
                 break;
                 
             case 'wallet_cash_in':
-                // Client envoie wallet → reçoit cash
-                // Wallet perd du virtuel, Branch perd du cash
+                // Client retire cash depuis son wallet (virtuel → cash)
+                // 1. Wallet perd du solde virtuel
                 if ($transaction->wallet) {
                     $this->updateWalletVirtual($transaction->wallet, -$amount);
                 }
+                // 2. Branch perd du cash (donne au client)
+                //    Le montant net est donné au client (après frais)
                 if ($transaction->branch) {
-                    $this->updateBranchCash($transaction->branch, -($amount - $feeAmount));
+                    $this->updateBranchCash($transaction->branch, -$netAmount, $currencyCode);
                 }
                 break;
                 
             case 'wallet_cash_out':
-                // Client donne cash → reçoit wallet
-                // Wallet gagne du virtuel, Branch gagne du cash
-                if ($transaction->wallet) {
-                    $this->updateWalletVirtual($transaction->wallet, $amount - $feeAmount);
-                }
+                // Client dépose cash dans son wallet (cash → virtuel)
+                // 1. Branch gagne du cash (reçoit du client)
                 if ($transaction->branch) {
-                    $this->updateBranchCash($transaction->branch, $amount);
+                    $this->updateBranchCash($transaction->branch, $amount, $currencyCode);
+                }
+                // 2. Wallet gagne du solde virtuel (montant net après frais)
+                if ($transaction->wallet) {
+                    $this->updateWalletVirtual($transaction->wallet, $netAmount);
                 }
                 break;
                 
             case 'tams_deposit':
-                // Dépôt Compte TAMS
+                // Dépôt Compte TAMS (client donne cash à la branche)
                 // Branch gagne du cash
                 if ($transaction->branch) {
-                    $this->updateBranchCash($transaction->branch, $amount);
+                    $this->updateBranchCash($transaction->branch, $amount, $currencyCode);
                 }
                 break;
                 
             case 'tams_withdraw':
             case 'tams_debt_withdraw':
-                // Retrait Compte TAMS
+                // Retrait Compte TAMS (branche donne cash au client)
                 // Branch perd du cash
                 if ($transaction->branch) {
-                    $this->updateBranchCash($transaction->branch, -$amount);
+                    $this->updateBranchCash($transaction->branch, -$amount, $currencyCode);
                 }
                 break;
                 
             case 'wallet_to_wallet_transfer':
-                // Transfert wallet vers numéro
-                // Wallet source perd du virtuel
+                // Transfert de wallet à wallet (virtuel → virtuel)
+                // 1. Wallet source perd du solde virtuel
                 if ($transaction->wallet) {
                     $this->updateWalletVirtual($transaction->wallet, -$amount);
+                }
+                // 2. Wallet destination gagne du solde virtuel (montant net après frais)
+                //    On trouve le wallet destination via le numéro de téléphone
+                if ($transaction->customer_phone) {
+                    $destinationWallet = \App\Models\Wallet::where('wallet_number', $transaction->customer_phone)
+                        ->orWhere('phone', $transaction->customer_phone)
+                        ->first();
+                    
+                    if ($destinationWallet) {
+                        $this->updateWalletVirtual($destinationWallet, $netAmount);
+                    }
                 }
                 break;
                 
             case 'wallet_receive_only':
-                // Réception wallet simple
-                // Wallet gagne du virtuel
+                // Réception wallet simple (crédit direct)
+                // Wallet gagne du solde virtuel
                 if ($transaction->wallet) {
                     $this->updateWalletVirtual($transaction->wallet, $amount);
                 }
@@ -358,23 +387,36 @@ final class TransactionService
     }
 
     /**
-     * Update branch cash balance
+     * Update branch cash balance for a specific currency
      * @param \App\Models\Branch $branch
      * @param float $amount
+     * @param string $currencyCode
      * @return void
      */
-    private function updateBranchCash($branch, float $amount): void
+    private function updateBranchCash($branch, float $amount, string $currencyCode): void
     {
-        $newBalance = $branch->cash_balance + $amount;
+        // Get or create balance record for this currency
+        $branchBalance = $branch->getOrCreateBalance($currencyCode);
+        
+        // Ensure cash_balance is a float
+        $currentBalance = (float) $branchBalance->cash_balance;
+        
+        // Calculate new balance
+        $newBalance = $currentBalance + $amount;
         
         // Check for negative balance
         if ($newBalance < 0) {
-            throw new \Exception(__('Insufficient cash balance in branch. Available: :balance', [
-                'balance' => number_format($branch->cash_balance, 2)
-            ]));
+            throw new \Exception(sprintf(
+                'Insufficient %s cash balance in branch %s. Required: %s, Available: %s',
+                $currencyCode,
+                $branch->name,
+                number_format(abs($amount), 2),
+                number_format($currentBalance, 2)
+            ));
         }
         
-        $branch->update(['cash_balance' => $newBalance]);
+        // Update balance
+        $branchBalance->update(['cash_balance' => $newBalance]);
     }
 
     /**
@@ -396,6 +438,140 @@ final class TransactionService
         }
         
         $wallet->update(['virtual_balance' => $newBalance]);
+    }
+
+    /**
+     * Validate balances before creating a transaction
+     * This prevents creating transactions that will fail at completion
+     * 
+     * @param array $data
+     * @return void
+     * @throws \Exception
+     */
+    private function validateBalancesBeforeCreate(array $data): void
+    {
+        // Load necessary models
+        $transactionType = \App\Models\TransactionType::find($data['transaction_type_id']);
+        if (!$transactionType) {
+            return; // Cannot validate without transaction type
+        }
+        
+        $transactionCode = $transactionType->code;
+        $amount = $data['gross_amount'];
+        $feeAmount = $data['fee_amount'];
+        $netAmount = $data['net_amount'];
+        $currencyCode = $data['currency_code'] ?? 'CDF'; // Devise de la transaction
+        
+        // Load related models
+        $branch = isset($data['branch_id']) ? \App\Models\Branch::find($data['branch_id']) : null;
+        $destinationBranch = isset($data['destination_branch_id']) ? \App\Models\Branch::find($data['destination_branch_id']) : null;
+        $wallet = isset($data['wallet_id']) ? \App\Models\Wallet::find($data['wallet_id']) : null;
+        
+        // Validate based on transaction type
+        switch ($transactionCode) {
+            case 'cash_deposit_transfer':
+                // Branch source will lose cash (client deposits)
+                if ($branch) {
+                    $availableBalance = $branch->getBalance($currencyCode);
+                    if ($availableBalance < $amount) {
+                        throw new \Exception(__('Insufficient :currency cash balance in branch :name. Required: :required, Available: :balance', [
+                            'currency' => $currencyCode,
+                            'name' => $branch->name,
+                            'required' => number_format($amount, 2),
+                            'balance' => number_format($availableBalance, 2)
+                        ]));
+                    }
+                }
+                // Verify destination branch exists
+                if (!$destinationBranch) {
+                    throw new \Exception(__('Destination branch is required for cash transfer'));
+                }
+                break;
+                
+            case 'cash_withdraw_transfer':
+                // Check which branch will do the withdrawal
+                $withdrawalBranch = $destinationBranch ?? $branch;
+                if ($withdrawalBranch) {
+                    $availableBalance = $withdrawalBranch->getBalance($currencyCode);
+                    if ($availableBalance < $amount) {
+                        throw new \Exception(__('Insufficient :currency cash balance in branch :name. Required: :required, Available: :balance', [
+                            'currency' => $currencyCode,
+                            'name' => $withdrawalBranch->name,
+                            'required' => number_format($amount, 2),
+                            'balance' => number_format($availableBalance, 2)
+                        ]));
+                    }
+                }
+                break;
+                
+            case 'wallet_cash_in':
+                // Wallet will lose virtual balance
+                if ($wallet && $wallet->virtual_balance < $amount) {
+                    throw new \Exception(__('Insufficient virtual balance in wallet :number. Required: :required, Available: :balance', [
+                        'number' => $wallet->wallet_number,
+                        'required' => number_format($amount, 2),
+                        'balance' => number_format($wallet->virtual_balance, 2)
+                    ]));
+                }
+                // Branch will lose cash (gives net amount to customer)
+                if ($branch) {
+                    $availableBalance = $branch->getBalance($currencyCode);
+                    if ($availableBalance < $netAmount) {
+                        throw new \Exception(__('Insufficient :currency cash balance in branch :name. Required: :required, Available: :balance', [
+                            'currency' => $currencyCode,
+                            'name' => $branch->name,
+                            'required' => number_format($netAmount, 2),
+                            'balance' => number_format($availableBalance, 2)
+                        ]));
+                    }
+                }
+                break;
+                
+            case 'tams_withdraw':
+            case 'tams_debt_withdraw':
+                // Branch will lose cash
+                if ($branch) {
+                    $availableBalance = $branch->getBalance($currencyCode);
+                    if ($availableBalance < $amount) {
+                        throw new \Exception(__('Insufficient :currency cash balance in branch :name. Required: :required, Available: :balance', [
+                            'currency' => $currencyCode,
+                            'name' => $branch->name,
+                            'required' => number_format($amount, 2),
+                            'balance' => number_format($availableBalance, 2)
+                        ]));
+                    }
+                }
+                break;
+                
+            case 'wallet_to_wallet_transfer':
+                // Wallet source will lose virtual balance
+                if ($wallet && $wallet->virtual_balance < $amount) {
+                    throw new \Exception(__('Insufficient virtual balance in wallet :number. Required: :required, Available: :balance', [
+                        'number' => $wallet->wallet_number,
+                        'required' => number_format($amount, 2),
+                        'balance' => number_format($wallet->virtual_balance, 2)
+                    ]));
+                }
+                
+                // Verify destination wallet exists
+                if (isset($data['customer_phone'])) {
+                    $destinationWallet = \App\Models\Wallet::where('wallet_number', $data['customer_phone'])
+                        ->orWhere('phone', $data['customer_phone'])
+                        ->first();
+                    
+                    if (!$destinationWallet) {
+                        throw new \Exception(__('Destination wallet not found for phone: :phone', [
+                            'phone' => $data['customer_phone']
+                        ]));
+                    }
+                    
+                    // Prevent self-transfer
+                    if ($wallet && $destinationWallet->id === $wallet->id) {
+                        throw new \Exception(__('Cannot transfer to the same wallet'));
+                    }
+                }
+                break;
+        }
     }
 
     /**

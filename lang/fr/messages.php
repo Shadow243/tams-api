@@ -26,6 +26,7 @@ return [
     'branch_updated_successfully' => 'Agence mise à jour avec succès',
     'branch_deleted_successfully' => 'Agence supprimée avec succès',
     'branch_status_updated_successfully' => 'Statut de l\'agence mis à jour avec succès',
+    'branch_balances_updated_successfully' => 'Soldes de l\'agence mis à jour avec succès',
     'wallet_created_successfully' => 'Portefeuille créé avec succès',
     'wallet_updated_successfully' => 'Portefeuille mis à jour avec succès',
     'wallet_deleted_successfully' => 'Portefeuille supprimé avec succès',

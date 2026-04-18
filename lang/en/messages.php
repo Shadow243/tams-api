@@ -26,6 +26,7 @@ return [
     'branch_updated_successfully' => 'Branch updated successfully',
     'branch_deleted_successfully' => 'Branch deleted successfully',
     'branch_status_updated_successfully' => 'Branch status updated successfully',
+    'branch_balances_updated_successfully' => 'Branch balances updated successfully',
     'wallet_created_successfully' => 'Wallet created successfully',
     'wallet_updated_successfully' => 'Wallet updated successfully',
     'wallet_deleted_successfully' => 'Wallet deleted successfully',
