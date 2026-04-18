@@ -10,6 +10,7 @@ use App\Http\Resources\Api\UserResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 /**
  * @group Configurations
@@ -19,6 +20,15 @@ use App\Models\User;
 class UserController extends Controller
 {
     public function __construct(private UserService $userService){}
+
+    /**
+     * Get all available roles.
+     */
+    public function roles()
+    {
+        $roles = Role::select('id', 'name')->orderBy('name')->get();
+        return $this->sendData($roles);
+    }
 
     /**
      * Display a listing of the resource.

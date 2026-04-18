@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 /**
  * Service class for managing user-related operations.
@@ -22,14 +23,27 @@ final class UserService
      */
     public function create(array $data): User
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
-            'country_code' => $data['country_code'],
-            'phone_number' => $data['phone_number'],
+            'country_code' => $data['country_code'] ?? null,
+            'phone_number' => $data['phone_number'] ?? null,
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'gender' => $data['gender'] ?? null,
+            'branch_id' => $data['branch_id'] ?? null,
+            'active' => $data['active'] ?? true,
         ]);
+
+        if (!empty($data['role_id'])) {
+            $role = Role::find($data['role_id']);
+            if ($role) {
+                $user->syncRoles([$role->name]);
+            }
+        } elseif (!empty($data['roles'])) {
+            $user->syncRoles($data['roles']);
+        }
+
+        return $user;
     }
 
     /**
@@ -102,7 +116,21 @@ final class UserService
             $updateData['active'] = (bool) $data['active'];
         }
 
+        if (array_key_exists('branch_id', $data)) {
+            $updateData['branch_id'] = $data['branch_id'];
+        }
+
         $user->update($updateData);
+
+        if (!empty($data['role_id'])) {
+            $role = Role::find($data['role_id']);
+            if ($role) {
+                $user->syncRoles([$role->name]);
+            }
+        } elseif (isset($data['roles'])) {
+            $user->syncRoles($data['roles']);
+        }
+
         return $user->fresh();
     }
 

@@ -187,6 +187,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('users')->name('users.')->group(function () {
         // Users Routes
+        Route::get('/roles', [UserController::class, 'roles'])->name('roles');
         Route::get('/', [UserController::class, 'index'])->middleware('permission:lire_utilisateurs')->name('index');
         Route::post('/', [UserController::class, 'store'])->middleware('permission:creer_utilisateurs')->name('store');
         Route::post('/bulk-delete', [UserController::class, 'bulkDestroy'])->middleware('permission:supprimer_utilisateurs')->name('bulkDestroy');
