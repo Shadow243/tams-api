@@ -48,6 +48,7 @@ Route::get('translations/{locale}', [LocaleController::class, 'getTranslations']
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('login', LoginController::class);
+    Route::post('verify-2fa', [LoginController::class, 'verify2FA'])->name('verify-2fa');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', LogoutController::class)->name('logout');

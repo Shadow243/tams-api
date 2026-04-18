@@ -65,14 +65,25 @@ class TwoFactorController extends Controller
         if ($validator->fails()) {
             return $this->sendErrorResponse($validator->errors()->first(), 422);
         }
-        $secret = Crypt::decryptString($user->two_factor_secret);
-        $otp = TOTP::create($secret);
-        if (!$otp->verify($request->code)) {
-            return $this->sendErrorResponse('Invalid code', 422);
+        
+        // Check if secret exists
+        if (!$user->two_factor_secret) {
+            return $this->sendErrorResponse('2FA secret not found. Please enable 2FA first.', 422);
         }
-        $user->two_factor_enabled = true;
-        $user->save();
-        return $this->sendMessage('2FA enabled successfully');
+        
+        try {
+            $secret = Crypt::decryptString($user->two_factor_secret);
+            $otp = TOTP::create($secret);
+            if (!$otp->verify($request->code)) {
+                return $this->sendErrorResponse('Invalid code', 422);
+            }
+            $user->two_factor_enabled = true;
+            $user->save();
+            return $this->sendMessage('2FA enabled successfully');
+        } catch (\Exception $e) {
+            \Log::error('2FA confirmation error: ' . $e->getMessage());
+            return $this->sendErrorResponse('Failed to confirm 2FA: ' . $e->getMessage(), 500);
+        }
     }
 
     /**
