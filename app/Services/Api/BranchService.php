@@ -68,7 +68,7 @@ final class BranchService
         $countryId = $request->input('country_id');
 
         $query = Branch::query()
-            ->with('country')
+            ->with(['country', 'balances.currency'])
             ->select(['id', 'uuid', 'code', 'name', 'country_id', 'address', 'cash_balance', 'status', 'created_at', 'updated_at']);
 
         // Apply search filter

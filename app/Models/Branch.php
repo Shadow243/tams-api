@@ -84,7 +84,7 @@ class Branch extends Model
     public function getBalance(string $currencyCode): float
     {
         $balance = $this->balances()->where('currency_code', $currencyCode)->first();
-        return $balance ? $balance->cash_balance : 0;
+        return $balance ? (float) $balance->cash_balance : 0.0;
     }
 
     /**

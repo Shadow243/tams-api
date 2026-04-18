@@ -37,6 +37,7 @@ Route::get('/healthcheck', function () {
 //DONE: manage wallet balances properly (update balance on transaction completion, prevent transactions that would cause negative balance, etc.) ✅
 //DONE: make receipt printable and downloadable as PDF just after transaction completion, without needing to fetch it again from the server. (return the receipt data in the response of the transaction completion endpoint) ✅
 //DONE: multi-currency support for branch cash balances (branch_balances table with currency_code) ✅
+//DONE: UI interface for managing branch balances per currency (modal with currency cards) ✅
 
 
 Route::get('locales', LocaleController::class)
