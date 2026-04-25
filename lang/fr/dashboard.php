@@ -49,6 +49,22 @@ return [
         'custom'     => 'Plage personnalisée',
     ],
 
+    // Balance Report
+    'balance_report'       => 'Rapport des soldes',
+    'balance_report_desc'  => 'Soldes cash par agence et soldes virtuels par wallet',
+    'total_branch_cash'    => 'Cash agences',
+    'total_wallet_virtual' => 'Virtuel wallets',
+    'branch_balances'      => 'Soldes agences (Cash)',
+    'wallet_balances'      => 'Soldes wallets (Virtuel)',
+    'no_balance_data'      => 'Aucun solde enregistré',
+    'no_wallets'           => 'Aucun wallet',
+    'branch'               => 'Agence',
+    'currency'             => 'Devise',
+    'cash_balance'         => 'Solde Cash',
+    'wallet'               => 'Numéro',
+    'operator'             => 'Opérateur',
+    'virtual_balance'      => 'Solde Virtuel',
+
     // UI States
     'filters_active' => 'filtre(s) actif(s)',
     'reset_filters'  => 'Réinitialiser',

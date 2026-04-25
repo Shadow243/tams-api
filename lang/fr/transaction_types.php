@@ -12,8 +12,28 @@ return [
 
     // Form Fields
     'code' => 'Code',
+    'code_hint' => 'Lettres minuscules, chiffres et underscores uniquement',
     'name' => 'Nom',
     'description' => 'Description',
+    'cancel' => 'Annuler',
+    'create' => 'Créer',
+    'update' => 'Modifier',
+
+    // Balance Configuration
+    'balance_config'      => 'Configuration des soldes',
+    'balance_config_hint' => 'Définit comment les soldes sont affectés lorsque cette transaction est complétée.',
+    'branch_source'       => 'Agence source',
+    'branch_destination'  => 'Agence destination',
+    'wallet'              => 'Wallet source',
+    'wallet_destination'  => 'Wallet destination',
+    'effect'              => 'Effet',
+    'effect_none'         => 'Aucun',
+    'effect_debit'        => 'Débit (perd du cash)',
+    'effect_credit'       => 'Crédit (reçoit du cash)',
+    'amount'              => 'Montant appliqué',
+    'amount_gross'        => 'Montant brut',
+    'amount_net'          => 'Montant net (après frais)',
+    'amount_fee'          => 'Frais uniquement',
 
     // Table Headers
     'table' => [

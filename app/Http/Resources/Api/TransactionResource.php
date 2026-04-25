@@ -36,6 +36,8 @@ class TransactionResource extends JsonResource
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'wallet_id' => $this->wallet_id,
             'wallet' => new WalletResource($this->whenLoaded('wallet')),
+            'dest_wallet_id' => $this->dest_wallet_id,
+            'dest_wallet' => new WalletResource($this->whenLoaded('destWallet')),
             'customer_phone' => $this->customer_phone,
             'gross_amount' => $this->gross_amount,
             'fee_amount' => $this->fee_amount,

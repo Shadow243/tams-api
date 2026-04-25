@@ -12,8 +12,28 @@ return [
 
     // Form Fields
     'code' => 'Code',
+    'code_hint' => 'Use only lowercase letters, numbers and underscores',
     'name' => 'Name',
     'description' => 'Description',
+    'cancel' => 'Cancel',
+    'create' => 'Create',
+    'update' => 'Update',
+
+    // Balance Configuration
+    'balance_config'      => 'Balance Configuration',
+    'balance_config_hint' => 'Defines how balances are affected when this transaction is completed.',
+    'branch_source'       => 'Source Branch',
+    'branch_destination'  => 'Destination Branch',
+    'wallet'              => 'Source Wallet',
+    'wallet_destination'  => 'Destination Wallet',
+    'effect'              => 'Effect',
+    'effect_none'         => 'None',
+    'effect_debit'        => 'Debit (loses cash)',
+    'effect_credit'       => 'Credit (gains cash)',
+    'amount'              => 'Amount applied',
+    'amount_gross'        => 'Gross amount',
+    'amount_net'          => 'Net amount (after fees)',
+    'amount_fee'          => 'Fee only',
 
     // Table Headers
     'table' => [

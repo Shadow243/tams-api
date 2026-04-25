@@ -152,6 +152,14 @@ final class CurrencyService
             \Log::warning('Could not check currency usage in transactions: ' . $e->getMessage());
         }
 
+        // Prevent deletion if any branch has a non-zero cash balance in this currency
+        if ($currency->branchBalances()->where('cash_balance', '>', 0)->exists()) {
+            return [
+                'message' => __('currencies.used_by_branch_balances'),
+                'code' => 422,
+            ];
+        }
+
         return null;
     }
 
@@ -161,6 +169,9 @@ final class CurrencyService
      */
     public function destroy(Currency $currency): void
     {
+        // Remove zero-balance branch_balances first to satisfy the FK constraint
+        $currency->branchBalances()->where('cash_balance', 0)->delete();
+
         $currency->delete();
     }
 }

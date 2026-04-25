@@ -98,6 +98,14 @@ class Currency extends Model
     }
 
     /**
+     * Get all branch balance records for this currency.
+     */
+    public function branchBalances()
+    {
+        return $this->hasMany(BranchBalance::class, 'currency_code', 'code');
+    }
+
+    /**
      * Format an amount with the currency symbol.
      */
     public function formatAmount(float $amount): string

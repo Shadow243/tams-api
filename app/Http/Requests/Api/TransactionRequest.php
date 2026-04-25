@@ -58,6 +58,12 @@ class TransactionRequest extends FormRequest
                 'integer',
                 'exists:wallets,id',
             ],
+            'dest_wallet_id' => [
+                'nullable',
+                'integer',
+                'exists:wallets,id',
+                'different:wallet_id',
+            ],
             'currency_id' => [
                 'nullable',
                 'integer',

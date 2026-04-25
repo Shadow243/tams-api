@@ -118,7 +118,7 @@ class FeeRuleController extends Controller
         );
 
         if (!$feeRule) {
-            return $this->sendError(__('messages.no_applicable_fee_rule_found'), 404);
+            return $this->sendErrorResponse(__('messages.no_applicable_fee_rule_found'), 404);
         }
 
         $feeRule->load(['transactionType', 'operator', 'branch']);

@@ -29,6 +29,7 @@ return [
     'in_use' => 'Cette devise est utilisée dans des transactions et ne peut pas être supprimée',
     'used_by_wallets' => 'Cette devise est utilisée par des portefeuilles et ne peut pas être supprimée',
     'cannot_delete_default' => 'La devise par défaut ne peut pas être supprimée',
+    'used_by_branch_balances' => 'Cette devise a des soldes d\'agence non nuls et ne peut pas être supprimée',
     'no_default_currency' => 'Aucune devise par défaut configurée',
     
     // Confirmation

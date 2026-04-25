@@ -22,7 +22,7 @@ class WalletResource extends JsonResource
             'operator_id' => $this->operator_id,
             'operator' => new OperatorResource($this->whenLoaded('operator')),
             'wallet_number' => $this->wallet_number,
-            'balance' => $this->balance,
+            'virtual_balance' => $this->virtual_balance,
             'currency_id' => $this->currency_id,
             'currency' => new CurrencyResource($this->whenLoaded('currency')),
             'formatted_balance' => $this->formatted_balance,

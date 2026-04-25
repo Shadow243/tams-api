@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LocaleController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
+use App\Http\Controllers\Api\BalanceReportController;
 use App\Http\Controllers\Api\Configs\BranchController;
 use App\Http\Controllers\Api\Configs\CountryController;
 use App\Http\Controllers\Api\Configs\FeeRuleController;
@@ -43,6 +44,9 @@ Route::get('/healthcheck', function () {
 Route::get('locales', LocaleController::class)
     ->name('locales');
 
+Route::get('languages', LocaleController::class)
+    ->name('languages');
+
 Route::get('translations/{locale}', [LocaleController::class, 'getTranslations'])
     ->where('locale', '[a-zA-Z_\-]+')
     ->name('translations.messages');
@@ -59,10 +63,21 @@ Route::prefix('auth')->name('auth.')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Broadcasting channel authentication (private/presence channels)
+    Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    })->name('broadcasting.auth');
+
     Route::post('me', [LogoutController::class, 'me'])->name('me');
     
     // User avatar upload (authenticated user only)
     Route::post('user/avatar', [UserController::class, 'uploadAvatar'])->name('user.upload-avatar');
+    
+    // User profile update (authenticated user only)
+    Route::put('user/profile', [UserController::class, 'updateProfile'])->name('user.update-profile');
+    
+    // User password update (authenticated user only)
+    Route::put('user/password', [UserController::class, 'updateOwnPassword'])->name('user.update-password');
     
     // User settings (authenticated user only)
     Route::get('user/settings', [UserController::class, 'getSettings'])->name('user.get-settings');
@@ -198,6 +213,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs');
         Route::delete('{user}', [UserController::class, 'destroy'])->middleware('permission:supprimer_utilisateurs')->name('destroy');
     });
+
+    // ── Balance Report ─────────────────────────────────────────────────────
+    Route::get('/reports/balances', [BalanceReportController::class, 'index'])
+        ->middleware('permission:lire_branches')
+        ->name('reports.balances');
 
     // ── Notifications ──────────────────────────────────────────────────────
     Route::prefix('notifications')->name('notifications.')->group(function () {

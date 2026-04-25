@@ -22,6 +22,14 @@ class TransactionType extends Model
         'code',
         'name',
         'description',
+        'branch_effect',
+        'branch_amount',
+        'wallet_effect',
+        'wallet_amount',
+        'dest_branch_effect',
+        'dest_branch_amount',
+        'dest_wallet_effect',
+        'dest_wallet_amount',
     ];
 
     /**

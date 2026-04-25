@@ -132,6 +132,30 @@ class UserController extends Controller
     }
 
     /**
+     * Update authenticated user's password.
+     */
+    public function updateOwnPassword(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Verify current password
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return $this->sendErrorResponse(__('messages.current_password_incorrect'), 422);
+        }
+
+        // Update password
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        $user->save();
+
+        return $this->sendMessage(__('messages.password_updated_successfully'));
+    }
+
+    /**
      * Upload user avatar.
      */
     public function uploadAvatar(Request $request)
@@ -179,5 +203,25 @@ class UserController extends Controller
         return $this->sendResponse([
             'settings' => $user->fresh()->settings
         ], __('Settings updated successfully'));
+    }
+
+    /**
+     * Update authenticated user's profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            'phone_number' => 'nullable|string|max:20',
+            'gender' => 'nullable|in:male,female,other',
+        ]);
+
+        $user->update($validated);
+
+        return $this->sendResponse(new UserResource($user->fresh()), __('messages.profile_updated_successfully'));
     }
 }

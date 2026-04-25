@@ -78,7 +78,7 @@ final class WalletService
 
         $query = Wallet::query()
             ->with(['branch', 'operator', 'currency'])
-            ->select(['id', 'uuid', 'branch_id', 'operator_id', 'wallet_number', 'balance', 'currency_id', 'status', 'created_at', 'updated_at']);
+            ->select(['id', 'uuid', 'branch_id', 'operator_id', 'wallet_number', 'virtual_balance', 'currency_id', 'status', 'created_at', 'updated_at']);
 
         // Apply search filter
         if ($search) {
@@ -121,30 +121,6 @@ final class WalletService
             : WalletStatus::ACTIVE;
 
         $wallet->update(['status' => $newStatus]);
-        
-        return $wallet->fresh();
-    }
-
-    /**
-     * Update wallet balance
-     * @param Wallet $wallet
-     * @param float $amount
-     * @param string $operation (add|subtract|set)
-     * @return Wallet
-     */
-    public function updateBalance(Wallet $wallet, float $amount, string $operation = 'set'): Wallet
-    {
-        $newBalance = match($operation) {
-            'add' => $wallet->balance + $amount,
-            'subtract' => $wallet->balance - $amount,
-            'set' => $amount,
-            default => $wallet->balance,
-        };
-
-        // Ensure balance doesn't go negative
-        $newBalance = max(0, $newBalance);
-
-        $wallet->update(['balance' => $newBalance]);
         
         return $wallet->fresh();
     }

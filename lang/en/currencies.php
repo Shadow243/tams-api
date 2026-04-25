@@ -29,6 +29,7 @@ return [
     'in_use' => 'This currency is being used in transactions and cannot be deleted',
     'used_by_wallets' => 'This currency is being used by wallets and cannot be deleted',
     'cannot_delete_default' => 'The default currency cannot be deleted',
+    'used_by_branch_balances' => 'This currency has non-zero branch balances and cannot be deleted',
     'no_default_currency' => 'No default currency configured',
     
     // Confirmation

@@ -51,7 +51,7 @@ class WalletRequest extends FormRequest
                     ->where('currency_id', $this->input('currency_id'))
                     ->ignore($walletId),
             ],
-            'balance' => [
+            'virtual_balance' => [
                 'nullable',
                 'numeric',
                 'min:0',
@@ -81,7 +81,7 @@ class WalletRequest extends FormRequest
             'branch_id' => __('wallets.form.branch'),
             'operator_id' => __('wallets.form.operator'),
             'wallet_number' => __('wallets.form.wallet_number'),
-            'balance' => __('wallets.form.balance'),
+            'virtual_balance' => __('wallets.form.virtual_balance'),
             'currency_id' => __('wallets.form.currency'),
             'status' => __('wallets.form.status'),
         ];

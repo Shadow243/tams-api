@@ -49,8 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            '/api/broadcasting/auth',
-            // '/api/v1/government/tax/*',
+            '/api/v1/broadcasting/auth',
         ]);
 
     })

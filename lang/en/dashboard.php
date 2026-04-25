@@ -49,6 +49,22 @@ return [
         'custom'     => 'Custom Range',
     ],
 
+    // Balance Report
+    'balance_report'       => 'Balance Report',
+    'balance_report_desc'  => 'Cash balances per branch and virtual balances per wallet',
+    'total_branch_cash'    => 'Branch Cash',
+    'total_wallet_virtual' => 'Wallet Virtual',
+    'branch_balances'      => 'Branch Balances (Cash)',
+    'wallet_balances'      => 'Wallet Balances (Virtual)',
+    'no_balance_data'      => 'No balance recorded',
+    'no_wallets'           => 'No wallets',
+    'branch'               => 'Branch',
+    'currency'             => 'Currency',
+    'cash_balance'         => 'Cash Balance',
+    'wallet'               => 'Number',
+    'operator'             => 'Operator',
+    'virtual_balance'      => 'Virtual Balance',
+
     // UI States
     'filters_active' => 'active filter(s)',
     'reset_filters'  => 'Reset',

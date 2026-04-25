@@ -24,7 +24,7 @@ return [
         'signInWith' => 'Sign in with',
         'continueWithEmail' => 'Continue with Email',
         'emailLabel' => 'Email address',
-        'emailPlaceholder' => 'you@example.com',
+        'emailPlaceholder' => "you{'@'}example.com",
         'passwordLabel' => 'Password',
         'passwordPlaceholder' => '••••••••',
         'rememberMe' => 'Keep me signed in',

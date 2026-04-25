@@ -52,6 +52,7 @@ class TransactionController extends Controller
             'user',
             'customer',
             'wallet',
+            'destWallet',
             'feeRule'
         ]);
 
@@ -71,7 +72,7 @@ class TransactionController extends Controller
         $transaction = $this->findTransaction($transaction);
         
         if (!$transaction) {
-            return $this->sendError(
+            return $this->sendErrorResponse(
                 __('messages.transaction_not_found'),
                 404
             );
@@ -84,6 +85,7 @@ class TransactionController extends Controller
             'user',
             'customer',
             'wallet',
+            'destWallet',
             'feeRule',
             'parentTransaction',
             'childTransactions'
@@ -101,7 +103,7 @@ class TransactionController extends Controller
         $transaction = $this->findTransaction($transaction);
         
         if (!$transaction) {
-            return $this->sendError(
+            return $this->sendErrorResponse(
                 __('messages.transaction_cannot_be_modified'),
                 403
             );
@@ -117,6 +119,7 @@ class TransactionController extends Controller
             'user',
             'customer',
             'wallet',
+            'destWallet',
             'feeRule'
         ]);
 
@@ -135,7 +138,7 @@ class TransactionController extends Controller
         $transaction = $this->findTransaction($transaction);
         
         if (!$transaction->canBeCancelled()) {
-            return $this->sendError(
+            return $this->sendErrorResponse(
                 __('messages.transaction_cannot_be_deleted'),
                 403
             );
@@ -166,7 +169,7 @@ class TransactionController extends Controller
                 __('messages.transaction_cancelled_successfully')
             );
         } catch (\Exception $e) {
-            return $this->sendError($e->getMessage(), 400);
+            return $this->sendErrorResponse($e->getMessage(), 400);
         }
     }
 
@@ -190,6 +193,7 @@ class TransactionController extends Controller
             'servedByBranch',
             'customer',
             'wallet',
+            'destWallet',
             'feeRule',
             'currency',
         ]);
@@ -226,6 +230,7 @@ class TransactionController extends Controller
             'branch_name' => $transaction->branch?->name,
             'destination_branch_name' => $transaction->destinationBranch?->name,
             'wallet_number' => $transaction->wallet?->wallet_number,
+            'dest_wallet_number' => $transaction->destWallet?->wallet_number,
             'gross_amount' => $transaction->gross_amount,
             'fee_amount' => $transaction->fee_amount,
             'net_amount' => $transaction->net_amount,
@@ -249,10 +254,17 @@ class TransactionController extends Controller
     {
         // Accept both UUID and ID
         $transaction = $this->findTransaction($transaction);
-        
+
         $request->validate([
             'status' => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, TransactionStatus::cases()))]
         ]);
+
+        if (TransactionStatus::from($request->status) === TransactionStatus::COMPLETED) {
+            return $this->sendErrorResponse(
+                __('messages.use_complete_endpoint'),
+                422
+            );
+        }
 
         $status = TransactionStatus::from($request->status);
         $model = $this->service->changeStatus($transaction, $status);
@@ -276,7 +288,7 @@ class TransactionController extends Controller
         $transaction = $this->service->verifyWithdrawalCode($request->code);
 
         if (!$transaction) {
-            return $this->sendError(
+            return $this->sendErrorResponse(
                 __('messages.invalid_withdrawal_code'),
                 404
             );
@@ -323,6 +335,7 @@ class TransactionController extends Controller
             'user',
             'customer',
             'wallet',
+            'destWallet',
             'feeRule',
             'currency',
         ]);

@@ -39,6 +39,7 @@ class Transaction extends Model
         'served_by_branch_id',
         'customer_id',
         'wallet_id',
+        'dest_wallet_id',
         'customer_phone',
         'gross_amount',
         'fee_amount',
@@ -138,11 +139,19 @@ class Transaction extends Model
     }
 
     /**
-     * Get the wallet associated with the transaction.
+     * Get the source wallet associated with the transaction.
      */
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    /**
+     * Get the destination wallet associated with the transaction.
+     */
+    public function destWallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class, 'dest_wallet_id');
     }
 
     /**
