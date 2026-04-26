@@ -9,6 +9,8 @@ use App\Enums\TransactionStatus;
 use App\Http\Resources\Api\TransactionResource;
 use App\Models\FeeRule;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Notifications\BalanceUpdateNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -42,19 +44,28 @@ final class TransactionService
                 $data['status'] = TransactionStatus::PENDING;
             }
 
-            // Calculate fee if not provided
-            if (!isset($data['fee_amount']) || !isset($data['fee_mode_applied'])) {
+            // Calculate fee if not provided, or get fee rule info if fee_amount is provided
+            if (!isset($data['fee_amount'])) {
+                // No fee amount provided, calculate it automatically
                 $feeCalculation = $this->calculateFee($data);
                 $data['fee_amount'] = $feeCalculation['fee_amount'];
                 $data['fee_mode_applied'] = $feeCalculation['fee_mode_applied'];
                 $data['fee_rule_id'] = $feeCalculation['fee_rule_id'];
                 $data['fee_snapshot'] = $feeCalculation['fee_snapshot'];
+            } else {
+                // Fee amount provided (e.g., negotiable mode), but we need to get the rule info
+                if (!isset($data['fee_mode_applied']) || !isset($data['fee_rule_id'])) {
+                    $feeInfo = $this->getFeeRuleInfo($data);
+                    $data['fee_mode_applied'] = $data['fee_mode_applied'] ?? $feeInfo['fee_mode_applied'];
+                    $data['fee_rule_id'] = $data['fee_rule_id'] ?? $feeInfo['fee_rule_id'];
+                    $data['fee_snapshot'] = $data['fee_snapshot'] ?? $feeInfo['fee_snapshot'];
+                }
             }
 
             $data['id'] = (new Transaction)->newUniqueId();
 
             // Calculate net amount
-            $data['net_amount'] = $data['gross_amount'] - $data['fee_amount'];
+            $data['net_amount'] = (float) $data['gross_amount'] - (float) $data['fee_amount'];
 
             // Validate balances before creating transaction
             $this->validateBalancesBeforeCreate($data);
@@ -74,8 +85,8 @@ final class TransactionService
         return DB::transaction(function () use ($transaction, $data) {
             // Recalculate net amount if amounts changed
             if (isset($data['gross_amount']) || isset($data['fee_amount'])) {
-                $gross = $data['gross_amount'] ?? $transaction->gross_amount;
-                $fee = $data['fee_amount'] ?? $transaction->fee_amount;
+                $gross = (float) ($data['gross_amount'] ?? $transaction->gross_amount);
+                $fee = (float) ($data['fee_amount'] ?? $transaction->fee_amount);
                 $data['net_amount'] = $gross - $fee;
             }
 
@@ -266,7 +277,7 @@ final class TransactionService
 
         return DB::transaction(function () use ($transaction) {
             // Load necessary relationships
-            $transaction->load(['transactionType', 'branch', 'destinationBranch', 'wallet', 'destWallet']);
+            $transaction->load(['transactionType', 'branch', 'destinationBranch', 'wallet', 'destWallet', 'currency']);
             
             // Update balances based on transaction type
             $this->updateBalances($transaction);
@@ -297,8 +308,8 @@ final class TransactionService
         $type        = $transaction->transactionType;
         $gross       = (float) $transaction->gross_amount;
         $fee         = (float) $transaction->fee_amount;
-        $net         = (float) $transaction->net_amount;
-        $currency    = $transaction->currency_code;
+        $net         = $gross - $fee;  // Recalculate to ensure consistency
+        $currency    = $transaction->currency->code;
 
         // Helper: resolve amount by config key
         $resolve = fn(string $amountKey): float => match($amountKey) {
@@ -308,23 +319,27 @@ final class TransactionService
         };
 
         // ── Branch (source) ──────────────────────────────────────────────
+        // Branch cash: what the branch physically receives (+) or gives out (-)
         $branchEffect = $type->branch_effect ?? 'none';
         if ($branchEffect !== 'none' && $transaction->branch) {
             $delta = $resolve($type->branch_amount ?? 'gross');
             $this->updateBranchCash(
                 $transaction->branch,
                 $branchEffect === 'debit' ? -$delta : $delta,
-                $currency
+                $currency,
+                $transaction
             );
         }
 
         // ── Wallet ───────────────────────────────────────────────────────
+        // Wallet virtual: what the wallet balance changes by (includes fees)
         $walletEffect = $type->wallet_effect ?? 'none';
         if ($walletEffect !== 'none' && $transaction->wallet) {
             $delta = $resolve($type->wallet_amount ?? 'gross');
             $this->updateWalletVirtual(
                 $transaction->wallet,
-                $walletEffect === 'debit' ? -$delta : $delta
+                $walletEffect === 'debit' ? -$delta : $delta,
+                $transaction
             );
         }
 
@@ -335,7 +350,8 @@ final class TransactionService
             $this->updateBranchCash(
                 $transaction->destinationBranch,
                 $destEffect === 'debit' ? -$delta : $delta,
-                $currency
+                $currency,
+                $transaction
             );
         }
 
@@ -345,7 +361,8 @@ final class TransactionService
             $delta = $resolve($type->dest_wallet_amount ?? 'gross');
             $this->updateWalletVirtual(
                 $transaction->destWallet,
-                $destWalletEffect === 'debit' ? -$delta : $delta
+                $destWalletEffect === 'debit' ? -$delta : $delta,
+                $transaction
             );
         }
     }
@@ -355,9 +372,10 @@ final class TransactionService
      * @param \App\Models\Branch $branch
      * @param float $amount
      * @param string $currencyCode
+     * @param Transaction $transaction
      * @return void
      */
-    private function updateBranchCash($branch, float $amount, string $currencyCode): void
+    private function updateBranchCash($branch, float $amount, string $currencyCode, Transaction $transaction): void
     {
         // Get or create balance record for this currency
         $branchBalance = $branch->getOrCreateBalance($currencyCode);
@@ -381,27 +399,111 @@ final class TransactionService
         
         // Update balance
         $branchBalance->update(['cash_balance' => $newBalance]);
+
+        // Send notification to users of this branch and the transaction creator
+        $this->notifyBalanceUpdate(
+            'branch',
+            $branch->id,
+            $branch->name,
+            $currentBalance,
+            $newBalance,
+            $amount,
+            $currencyCode,
+            $transaction,
+            $branch->id
+        );
     }
 
     /**
      * Update wallet virtual balance
      * @param \App\Models\Wallet $wallet
      * @param float $amount
+     * @param Transaction $transaction
      * @return void
      */
-    private function updateWalletVirtual($wallet, float $amount): void
+    private function updateWalletVirtual($wallet, float $amount, Transaction $transaction): void
     {
-        $newBalance = $wallet->virtual_balance + $amount;
+        $currentBalance = (float) $wallet->virtual_balance;
+        $newBalance = $currentBalance + $amount;
         
         // Check for negative balance
         if ($newBalance < 0) {
             throw new \Exception(__('Insufficient virtual balance in wallet :number. Available: :balance', [
                 'number' => $wallet->wallet_number,
-                'balance' => number_format($wallet->virtual_balance, 2)
+                'balance' => number_format($currentBalance, 2)
             ]));
         }
         
         $wallet->update(['virtual_balance' => $newBalance]);
+
+        // Send notification to transaction creator (wallet operations are typically self-service)
+        $this->notifyBalanceUpdate(
+            'wallet',
+            $wallet->id,
+            $wallet->wallet_number ?? "Wallet #{$wallet->id}",
+            $currentBalance,
+            $newBalance,
+            $amount,
+            $transaction->currency->code,
+            $transaction,
+            null  // No branch association for wallet notifications
+        );
+    }
+
+    /**
+     * Send balance update notification to relevant users
+     * @param string $entityType
+     * @param int|string $entityId
+     * @param string $entityName
+     * @param float $oldBalance
+     * @param float $newBalance
+     * @param float $amount
+     * @param string $currencyCode
+     * @param Transaction $transaction
+     * @param int|null $branchId
+     * @return void
+     */
+    private function notifyBalanceUpdate(
+        string $entityType,
+        int|string $entityId,
+        string $entityName,
+        float $oldBalance,
+        float $newBalance,
+        float $amount,
+        string $currencyCode,
+        Transaction $transaction,
+        ?int $branchId
+    ): void {
+        $notification = new BalanceUpdateNotification(
+            $entityType,
+            $entityId,
+            $entityName,
+            $oldBalance,
+            $newBalance,
+            $amount,
+            $currencyCode,
+            $transaction
+        );
+
+        // Always notify the transaction creator
+        $creator = User::find($transaction->user_id);
+        if ($creator) {
+            $creator->notify($notification);
+        }
+
+        // If there's a branch associated, notify branch users with appropriate permissions
+        if ($branchId) {
+            $branchUsers = User::where('branch_id', $branchId)
+                ->whereHas('roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'branch_manager', 'cashier']);
+                })
+                ->where('id', '!=', $transaction->user_id) // Don't notify creator twice
+                ->get();
+
+            foreach ($branchUsers as $user) {
+                $user->notify($notification);
+            }
+        }
     }
 
     /**
@@ -423,7 +525,10 @@ final class TransactionService
         $gross    = (float) $data['gross_amount'];
         $fee      = (float) ($data['fee_amount'] ?? 0);
         $net      = (float) ($data['net_amount'] ?? $gross - $fee);
-        $currency = $data['currency_code'] ?? 'CDF';
+        
+        // Get currency code from relation
+        $currencyModel = \App\Models\Currency::find($data['currency_id'] ?? null);
+        $currency = $currencyModel ? $currencyModel->code : 'CDF';
 
         $branch            = isset($data['branch_id']) ? \App\Models\Branch::find($data['branch_id']) : null;
         $destinationBranch = isset($data['destination_branch_id']) ? \App\Models\Branch::find($data['destination_branch_id']) : null;
@@ -513,12 +618,62 @@ final class TransactionService
             ];
         }
 
-        $grossAmount = $data['gross_amount'];
+        $grossAmount = (float) $data['gross_amount'];
         $feeAmount = $feeRule->calculateFee($grossAmount);
+
+        // Map FeeMode to FeeModeApplied
+        $feeModeApplied = match($feeRule->fee_mode) {
+            \App\Enums\FeeMode::FIXED => FeeModeApplied::FIXED,
+            \App\Enums\FeeMode::PERCENTAGE => FeeModeApplied::PERCENTAGE,
+            \App\Enums\FeeMode::NEGOTIABLE => FeeModeApplied::NEGOTIATED,
+        };
 
         return [
             'fee_amount' => $feeAmount,
-            'fee_mode_applied' => FeeModeApplied::from($feeRule->fee_mode->value),
+            'fee_mode_applied' => $feeModeApplied,
+            'fee_rule_id' => $feeRule->id,
+            'fee_snapshot' => [
+                'fee_mode' => $feeRule->fee_mode->value,
+                'value' => $feeRule->value,
+                'min_fee' => $feeRule->min_fee,
+                'max_fee' => $feeRule->max_fee,
+            ],
+        ];
+    }
+
+    /**
+     * Get fee rule info without calculating fee amount
+     * Used when fee_amount is provided by user (e.g., negotiable mode)
+     * @param array $data
+     * @return array
+     */
+    private function getFeeRuleInfo(array $data): array
+    {
+        $feeRuleService = new FeeRuleService();
+        
+        $feeRule = $feeRuleService->getApplicableFeeRule(
+            $data['transaction_type_id'],
+            $data['operator_id'] ?? null,
+            $data['branch_id']
+        );
+
+        if (!$feeRule) {
+            return [
+                'fee_mode_applied' => FeeModeApplied::MANUAL_OVERRIDE,
+                'fee_rule_id' => null,
+                'fee_snapshot' => null,
+            ];
+        }
+
+        // Map FeeMode to FeeModeApplied
+        $feeModeApplied = match($feeRule->fee_mode) {
+            \App\Enums\FeeMode::FIXED => FeeModeApplied::FIXED,
+            \App\Enums\FeeMode::PERCENTAGE => FeeModeApplied::PERCENTAGE,
+            \App\Enums\FeeMode::NEGOTIABLE => FeeModeApplied::NEGOTIATED,
+        };
+
+        return [
+            'fee_mode_applied' => $feeModeApplied,
             'fee_rule_id' => $feeRule->id,
             'fee_snapshot' => [
                 'fee_mode' => $feeRule->fee_mode->value,
@@ -743,8 +898,8 @@ final class TransactionService
                     'total_amount'       => $totalAmount,
                     'total_fees'         => $totalFees,
                     'total_net'          => $totalNet,
-                    'average_amount'     => round($averageAmount, 2),
-                    'success_rate'       => round($successRate, 2),
+                    'average_amount'     => round((float) $averageAmount, 2),
+                    'success_rate'       => round((float) $successRate, 2),
                 ],
                 'by_status' => $byStatus,
                 'by_type'   => $byType,

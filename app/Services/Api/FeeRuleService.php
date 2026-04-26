@@ -213,12 +213,12 @@ final class FeeRuleService
         }
 
         // Apply min_fee constraint
-        if ($feeRule->min_fee && $calculatedFee < $feeRule->min_fee) {
+        if ($feeRule->min_fee && $calculatedFee < (float) $feeRule->min_fee) {
             $calculatedFee = (float) $feeRule->min_fee;
         }
 
         // Apply max_fee constraint
-        if ($feeRule->max_fee && $calculatedFee > $feeRule->max_fee) {
+        if ($feeRule->max_fee && $calculatedFee > (float) $feeRule->max_fee) {
             $calculatedFee = (float) $feeRule->max_fee;
         }
 

@@ -159,19 +159,19 @@ class FeeRule extends Model
         }
 
         $fee = match ($this->fee_mode) {
-            FeeMode::FIXED => $this->value ?? 0,
-            FeeMode::PERCENTAGE => $amount * (($this->value ?? 0) / 100),
-            FeeMode::NEGOTIABLE => $this->min_fee ?? 0, // Default to min_fee for negotiable
+            FeeMode::FIXED => (float) ($this->value ?? 0),
+            FeeMode::PERCENTAGE => $amount * ((float) ($this->value ?? 0) / 100),
+            FeeMode::NEGOTIABLE => (float) ($this->min_fee ?? 0), // Default to min_fee for negotiable
             default => 0,
         };
 
         // Apply min/max constraints if set
-        if ($this->min_fee !== null && $fee < $this->min_fee) {
-            $fee = $this->min_fee;
+        if ($this->min_fee !== null && $fee < (float) $this->min_fee) {
+            $fee = (float) $this->min_fee;
         }
 
-        if ($this->max_fee !== null && $fee > $this->max_fee) {
-            $fee = $this->max_fee;
+        if ($this->max_fee !== null && $fee > (float) $this->max_fee) {
+            $fee = (float) $this->max_fee;
         }
 
         return round($fee, 2);

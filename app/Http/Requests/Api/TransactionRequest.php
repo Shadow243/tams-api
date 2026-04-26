@@ -167,7 +167,7 @@ class TransactionRequest extends FormRequest
         // Auto-calculate net amount if not provided
         if ($this->has('gross_amount') && $this->has('fee_amount')) {
             $this->merge([
-                'net_amount' => $this->gross_amount - ($this->fee_amount ?? 0),
+                'net_amount' => (float) $this->gross_amount - (float) ($this->fee_amount ?? 0),
             ]);
         }
     }
