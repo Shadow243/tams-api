@@ -64,6 +64,11 @@ return [
     'wallet'               => 'Numéro',
     'operator'             => 'Opérateur',
     'virtual_balance'      => 'Solde Virtuel',
+    'confirmed'            => 'Confirmé',
+    'pending'              => 'En attente',
+    'projected'            => 'Projeté',
+    'system_totals'        => 'Totaux Système',
+    'all_branches'         => 'Toutes les branches',
 
     // UI States
     'filters_active' => 'filtre(s) actif(s)',
