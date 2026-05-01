@@ -164,6 +164,7 @@ final class TransactionService
                 'completedBy',
                 'servedByBranch',
                 'customer',
+                'destCustomer',
                 'wallet',
                 'destWallet',
                 'feeRule',
@@ -172,10 +173,11 @@ final class TransactionService
             ->select([
                 'id', 'uuid', 'reference', 'transaction_type_id', 'branch_id',
                 'destination_branch_id', 'user_id', 'completed_by', 'served_by_branch_id',
-                'customer_id', 'wallet_id', 'dest_wallet_id', 'customer_phone', 'gross_amount', 'fee_amount', 'net_amount',
+                'customer_id', 'dest_customer_id', 'wallet_id', 'dest_wallet_id', 'customer_phone',
+                'gross_amount', 'fee_amount', 'net_amount',
                 'currency_id', 'currency_code',
                 'fee_rule_id', 'fee_mode_applied', 'parent_transaction_id',
-                'withdrawal_code', 'expires_at', 'completed_at', 'status', 'created_at', 'updated_at'
+                'withdrawal_code', 'expires_at', 'completed_at', 'status', 'description', 'created_at', 'updated_at'
             ]);
 
         if ($search) {
