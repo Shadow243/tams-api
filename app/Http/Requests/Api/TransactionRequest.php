@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api;
 
 use App\Enums\FeeModeApplied;
 use App\Enums\TransactionStatus;
+use App\Models\TransactionType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -53,17 +54,8 @@ class TransactionRequest extends FormRequest
                 // 'uuid',
                 'exists:customers,id',
             ],
-            'wallet_id' => [
-                'nullable',
-                'integer',
-                'exists:wallets,id',
-            ],
-            'dest_wallet_id' => [
-                'nullable',
-                'integer',
-                'exists:wallets,id',
-                'different:wallet_id',
-            ],
+            'wallet_id' => $this->walletIdRules('wallet_effect'),
+            'dest_wallet_id' => $this->walletIdRules('dest_wallet_effect', 'different:wallet_id'),
             'currency_id' => [
                 'nullable',
                 'integer',
@@ -132,6 +124,23 @@ class TransactionRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Build wallet_id / dest_wallet_id rules: required when the transaction type
+     * has a non-'none' effect for that wallet slot.
+     */
+    private function walletIdRules(string $effectField, string ...$extra): array
+    {
+        $typeId = $this->input('transaction_type_id');
+        $type = $typeId ? TransactionType::find($typeId) : null;
+        $needsWallet = $this->isMethod('POST') && $type && ($type->{$effectField} ?? 'none') !== 'none';
+
+        $base = $needsWallet
+            ? ['required', 'integer', 'exists:wallets,id']
+            : ['nullable', 'integer', 'exists:wallets,id'];
+
+        return array_merge($base, $extra);
     }
 
     /**
