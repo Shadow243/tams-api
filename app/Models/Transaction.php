@@ -55,6 +55,7 @@ class Transaction extends Model
         'expires_at',
         'completed_at',
         'status',
+        'description',
     ];
 
     /**

@@ -274,6 +274,16 @@
         <span class="nt-value">{{ $fmt($transaction->net_amount) }} {{ $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
     </div>
 
+    <!-- Description / Note -->
+    @if($transaction->description)
+    <div class="section" style="background:#f8f9fa;border-radius:4px;padding:8px 11px;margin-bottom:10px;border:1px solid #e5e7eb;">
+        <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">
+            <i>Note</i>
+        </div>
+        <div style="font-size:10px;color:#374151;line-height:1.5;">{{ $transaction->description }}</div>
+    </div>
+    @endif
+
     <!-- Expiry warning -->
     @if($transaction->expires_at && in_array($transaction->status->value, ['pending', 'available']))
     <div class="expiry-alert">

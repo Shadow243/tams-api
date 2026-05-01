@@ -112,6 +112,11 @@ class TransactionRequest extends FormRequest
                 'string',
                 Rule::in(array_map(fn($case) => $case->value, TransactionStatus::cases())),
             ],
+            'description' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
         ];
 
         // On update, we can change status

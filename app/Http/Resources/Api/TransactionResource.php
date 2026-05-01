@@ -61,6 +61,7 @@ class TransactionResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
+            'description' => $this->description,
             'can_be_modified' => $this->canBeModified(),
             'can_be_cancelled' => $this->canBeCancelled(),
             'is_expired' => $this->isExpired(),

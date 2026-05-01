@@ -158,13 +158,21 @@ class TransactionController extends Controller
     /**
      * Cancel a transaction
      */
-    public function cancel(string $transaction)
+    public function cancel(Request $request, string $transaction)
     {
         // Accept both UUID and ID
         $transaction = $this->findTransaction($transaction);
-        
+
+        $request->validate(['description' => ['nullable', 'string', 'max:1000']]);
+
         try {
             $model = $this->service->cancel($transaction);
+
+            if ($request->filled('description')) {
+                $model->description = $request->input('description');
+                $model->save();
+            }
+
             $model->load(['transactionType', 'branch', 'user', 'customer']);
 
             return $this->sendResponse(
@@ -179,12 +187,19 @@ class TransactionController extends Controller
     /**
      * Complete a transaction
      */
-    public function complete(string $transaction)
+    public function complete(Request $request, string $transaction)
     {
         // Accept both UUID and ID
         $transaction = $this->findTransaction($transaction);
-        
+
+        $request->validate(['description' => ['nullable', 'string', 'max:1000']]);
+
         $model = $this->service->complete($transaction);
+
+        if ($request->filled('description')) {
+            $model->description = $request->input('description');
+            $model->save();
+        }
         
         // Load all relationships needed for receipt
         $model->load([
@@ -249,6 +264,7 @@ class TransactionController extends Controller
             'completed_at' => $transaction->completed_at?->format('Y-m-d H:i:s'),
             'completed_by' => $transaction->completedBy?->name,
             'served_by_branch' => $transaction->servedByBranch?->name,
+            'description' => $transaction->description,
             'logo' => $logoSrc,
         ];
     }
