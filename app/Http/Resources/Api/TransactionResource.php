@@ -34,6 +34,8 @@ class TransactionResource extends JsonResource
             'served_by_branch' => new BranchResource($this->whenLoaded('servedByBranch')),
             'customer_id' => $this->customer_id,
             'customer' => new CustomerResource($this->whenLoaded('customer')),
+            'dest_customer_id' => $this->dest_customer_id,
+            'dest_customer' => new CustomerResource($this->whenLoaded('destCustomer')),
             'wallet_id' => $this->wallet_id,
             'wallet' => new WalletResource($this->whenLoaded('wallet')),
             'dest_wallet_id' => $this->dest_wallet_id,

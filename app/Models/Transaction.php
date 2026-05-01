@@ -38,6 +38,7 @@ class Transaction extends Model
         'completed_by',
         'served_by_branch_id',
         'customer_id',
+        'dest_customer_id',
         'wallet_id',
         'dest_wallet_id',
         'customer_phone',
@@ -136,6 +137,14 @@ class Transaction extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Get the destination customer for the transaction.
+     */
+    public function destCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'dest_customer_id');
     }
 
     /**

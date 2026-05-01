@@ -51,14 +51,15 @@ class TransactionController extends Controller
             'destinationBranch',
             'user',
             'customer',
+            'destCustomer',
             'wallet',
             'destWallet',
             'feeRule'
         ]);
 
         return $this->sendResponse(
-            new TransactionResource($model), 
-            __('messages.transaction_created_successfully'), 
+            new TransactionResource($model),
+            __('messages.transaction_created_successfully'),
             201
         );
     }
@@ -84,6 +85,7 @@ class TransactionController extends Controller
             'destinationBranch',
             'user',
             'customer',
+            'destCustomer',
             'wallet',
             'destWallet',
             'feeRule',
@@ -118,13 +120,14 @@ class TransactionController extends Controller
             'destinationBranch',
             'user',
             'customer',
+            'destCustomer',
             'wallet',
             'destWallet',
             'feeRule'
         ]);
 
         return $this->sendResponse(
-            new TransactionResource($model), 
+            new TransactionResource($model),
             __('messages.transaction_updated_successfully')
         );
     }
@@ -192,6 +195,7 @@ class TransactionController extends Controller
             'completedBy',
             'servedByBranch',
             'customer',
+            'destCustomer',
             'wallet',
             'destWallet',
             'feeRule',
@@ -227,6 +231,8 @@ class TransactionController extends Controller
             'transaction_type' => $transaction->transactionType?->name,
             'customer_name' => $transaction->customer?->full_name,
             'customer_phone' => $transaction->customer_phone,
+            'dest_customer_name' => $transaction->destCustomer?->full_name,
+            'dest_customer_phone' => $transaction->destCustomer?->phone,
             'branch_name' => $transaction->branch?->name,
             'destination_branch_name' => $transaction->destinationBranch?->name,
             'wallet_number' => $transaction->wallet?->wallet_number,
@@ -334,6 +340,7 @@ class TransactionController extends Controller
             'destinationBranch',
             'user',
             'customer',
+            'destCustomer',
             'wallet',
             'destWallet',
             'feeRule',

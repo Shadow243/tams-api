@@ -232,6 +232,16 @@
             <span class="val">{{ $transaction->customer_phone }}</span>
         </div>
         @endif
+        @if($transaction->destCustomer)
+        <div class="row">
+            <span class="lbl">Bénéficiaire</span>
+            <span class="val">{{ $transaction->destCustomer->full_name }}</span>
+        </div>
+        <div class="row">
+            <span class="lbl">Tél. bénéficiaire</span>
+            <span class="val">{{ $transaction->destCustomer->phone }}</span>
+        </div>
+        @endif
         <div class="row">
             <span class="lbl">Caissier</span>
             <span class="val">{{ $transaction->user->name }}</span>

@@ -56,6 +56,7 @@ class TransactionRequest extends FormRequest
             ],
             'wallet_id' => $this->walletIdRules('wallet_effect'),
             'dest_wallet_id' => $this->walletIdRules('dest_wallet_effect', 'different:wallet_id'),
+            'dest_customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'currency_id' => [
                 'nullable',
                 'integer',

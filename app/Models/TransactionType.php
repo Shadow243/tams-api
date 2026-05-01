@@ -52,7 +52,7 @@ class TransactionType extends Model
     /**
      * Scope a query to only include specific code.
      */
-    public function scopeByCode($query, string $code)
+    public function scopeByCode(\Illuminate\Database\Eloquent\Builder $query, string $code)
     {
         return $query->where('code', $code);
     }
