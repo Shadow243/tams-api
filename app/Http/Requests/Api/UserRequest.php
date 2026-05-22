@@ -70,6 +70,8 @@ class UserRequest extends FormRequest
                 Password::min(8),
                 'confirmed',
             ],
+            'wallet_ids'   => ['nullable', 'array'],
+            'wallet_ids.*' => ['integer', 'exists:wallets,id'],
         ];
     }
 }

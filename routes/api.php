@@ -21,7 +21,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Resources\Api\UserResource;
 
 Route::get('/user', function (Request $request) {
-    return new UserResource($request->user());
+    return new UserResource($request->user()->load('wallets'));
 })->middleware('auth:api');
 
 Route::get('/healthcheck', function () {
@@ -212,6 +212,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('{user}/password', [UserController::class, 'updatePassword'])->name('update-password');
         Route::patch('{user}', [UserController::class, 'update'])->middleware('permission:editer_utilisateurs');
         Route::delete('{user}', [UserController::class, 'destroy'])->middleware('permission:supprimer_utilisateurs')->name('destroy');
+        // Wallet assignment for agents
+        Route::get('{user}/wallets', [UserController::class, 'wallets'])->middleware('permission:lire_utilisateurs')->name('wallets');
+        Route::put('{user}/wallets', [UserController::class, 'syncWallets'])->middleware('permission:editer_utilisateurs')->name('sync-wallets');
     });
 
     // ── Balance Report ─────────────────────────────────────────────────────

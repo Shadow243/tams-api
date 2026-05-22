@@ -38,6 +38,7 @@ class UserResource extends JsonResource
             'two_factor_enabled' => (bool) $this->two_factor_enabled,
             'permissions' => $this->getAllPermissions()->pluck('name')->toArray(),
             'roles' => $this->getRoleNames()->toArray(),
+            'wallet_ids' => $this->whenLoaded('wallets', fn() => $this->wallets->pluck('id')->toArray(), []),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

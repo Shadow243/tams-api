@@ -159,4 +159,12 @@ final class User extends Authenticatable implements HasLocalePreference
     {
         return $this->belongsTo(Branch::class);
     }
+
+    /**
+     * Wallets assigned to this user (agent).
+     */
+    public function wallets()
+    {
+        return $this->belongsToMany(Wallet::class, 'user_wallet')->withTimestamps();
+    }
 }

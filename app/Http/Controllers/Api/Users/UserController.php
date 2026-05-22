@@ -51,7 +51,11 @@ class UserController extends Controller
             $model = $this->userService->updateAvatar($model, $request->file('avatar'));
         }
 
-        return $this->sendResponse(new UserResource($model), __('messages.user_created_successfully'), 201);
+        if ($request->has('wallet_ids')) {
+            $model->wallets()->sync($request->input('wallet_ids', []));
+        }
+
+        return $this->sendResponse(new UserResource($model->load('wallets')), __('messages.user_created_successfully'), 201);
     }
 
     /**
@@ -59,7 +63,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return $this->sendData(new UserResource($user));
+        return $this->sendData(new UserResource($user->load('wallets')));
     }
 
     /**
@@ -73,7 +77,11 @@ class UserController extends Controller
             $model = $this->userService->updateAvatar($model, $request->file('avatar'));
         }
 
-        return $this->sendResponse(new UserResource($model), __('messages.user_updated_successfully'));
+        if ($request->has('wallet_ids')) {
+            $model->wallets()->sync($request->input('wallet_ids', []));
+        }
+
+        return $this->sendResponse(new UserResource($model->load('wallets')), __('messages.user_updated_successfully'));
     }
 
     /**
@@ -223,5 +231,41 @@ class UserController extends Controller
         $user->update($validated);
 
         return $this->sendResponse(new UserResource($user->fresh()), __('messages.profile_updated_successfully'));
+    }
+
+    /**
+     * List wallets assigned to a user.
+     */
+    public function wallets(User $user)
+    {
+        $user->load(['wallets.branch', 'wallets.operator', 'wallets.currency']);
+
+        return $this->sendData(
+            $user->wallets->map(fn($w) => [
+                'id'             => $w->id,
+                'wallet_number'  => $w->wallet_number,
+                'operator_name'  => $w->operator?->name,
+                'branch_name'    => $w->branch?->name,
+                'currency_code'  => $w->currency?->code,
+                'currency_symbol'=> $w->currency?->symbol,
+                'status'         => $w->status,
+                'virtual_balance'=> (float) $w->virtual_balance,
+            ])
+        );
+    }
+
+    /**
+     * Sync (replace) the wallets assigned to a user.
+     */
+    public function syncWallets(Request $request, User $user)
+    {
+        $request->validate([
+            'wallet_ids'   => 'array',
+            'wallet_ids.*' => 'integer|exists:wallets,id',
+        ]);
+
+        $user->wallets()->sync($request->input('wallet_ids', []));
+
+        return $this->sendMessage(__('Wallets mis à jour avec succès.'));
     }
 }

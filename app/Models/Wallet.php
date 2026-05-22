@@ -74,6 +74,14 @@ class Wallet extends Model
     }
 
     /**
+     * Users (agents) assigned to this wallet.
+     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_wallet')->withTimestamps();
+    }
+
+    /**
      * Scope a query to only include active wallets.
      */
     public function scopeActive($query)
