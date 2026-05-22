@@ -917,6 +917,36 @@ final class TransactionService
                 ->limit(10)
                 ->get();
 
+            // ── Query 6: stats by wallet ──────────────────────────────────────
+            $byWallet = Transaction::query()
+                ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
+                ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
+                ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
+                ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
+                ->whereNotNull('wallet_id')
+                ->selectRaw('wallet_id, COUNT(*) as count, SUM(gross_amount) as total_amount, SUM(fee_amount) as total_fees')
+                ->groupBy('wallet_id')
+                ->with([
+                    'wallet:id,wallet_number,operator_id,branch_id,currency_id',
+                    'wallet.operator:id,name',
+                    'wallet.branch:id,name',
+                    'wallet.currency:id,code,symbol',
+                ])
+                ->orderByDesc('total_amount')
+                ->get()
+                ->map(fn($item) => [
+                    'wallet_id'      => $item->wallet_id,
+                    'wallet_number'  => $item->wallet?->wallet_number  ?? 'N/A',
+                    'operator_name'  => $item->wallet?->operator?->name ?? 'N/A',
+                    'branch_name'    => $item->wallet?->branch?->name   ?? 'N/A',
+                    'currency_code'  => $item->wallet?->currency?->code ?? 'N/A',
+                    'currency_symbol'=> $item->wallet?->currency?->symbol,
+                    'count'          => (int)   $item->count,
+                    'total_amount'   => (float) $item->total_amount,
+                    'total_fees'     => (float) $item->total_fees,
+                ]);
+
             return [
                 'overview' => [
                     'total_transactions' => $totalTransactions,
@@ -929,6 +959,7 @@ final class TransactionService
                 'by_status' => $byStatus,
                 'by_type'   => $byType,
                 'by_branch' => $byBranch,
+                'by_wallet' => $byWallet,
                 'trend'     => $trendData,
                 'recent_transactions' => TransactionResource::collection($recentTransactions),
             ];
