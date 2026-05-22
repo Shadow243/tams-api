@@ -772,18 +772,19 @@ final class TransactionService
      */
     public function getDashboardStatistics(Request $request): array
     {
-        $startDate        = $request->input('start_date');
-        $endDate          = $request->input('end_date');
-        $branchId         = $request->input('branch_id');
-        $currencyId       = $request->input('currency_id');
+        $startDate         = $request->input('start_date');
+        $endDate           = $request->input('end_date');
+        $branchId          = $request->input('branch_id');
+        $currencyId        = $request->input('currency_id');
         $transactionTypeId = $request->input('transaction_type_id');
+        $userId            = $request->input('user_id');   // filtre agent
 
         $cacheKey = 'dashboard:stats:' . md5(json_encode([
-            $startDate, $endDate, $branchId, $currencyId, $transactionTypeId,
+            $startDate, $endDate, $branchId, $currencyId, $transactionTypeId, $userId,
         ]));
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use (
-            $startDate, $endDate, $branchId, $currencyId, $transactionTypeId
+            $startDate, $endDate, $branchId, $currencyId, $transactionTypeId, $userId
         ) {
             // ── Query 1: overview KPIs + status breakdown in a single pass ───
             $stats = Transaction::query()
@@ -791,6 +792,7 @@ final class TransactionService
                 ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
                 ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
                 ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
                 ->selectRaw("
                     COUNT(*) as total_transactions,
                     COALESCE(SUM(gross_amount), 0) as total_amount,
@@ -829,6 +831,7 @@ final class TransactionService
                 ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
                 ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
                 ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
                 ->selectRaw('transaction_type_id, COUNT(*) as count, SUM(gross_amount) as total_amount')
                 ->groupBy('transaction_type_id')
                 ->with('transactionType:id,name,code')
@@ -846,6 +849,7 @@ final class TransactionService
                 ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
                 ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
                 ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
                 ->selectRaw('branch_id, COUNT(*) as count, SUM(gross_amount) as total_amount')
                 ->groupBy('branch_id')
                 ->with('branch:id,name,code')
@@ -867,6 +871,7 @@ final class TransactionService
                 ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
                 ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
                 ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
                 ->selectRaw('DATE(created_at) as d')
                 ->groupBy('d')
                 ->orderBy('d', 'desc')
@@ -880,6 +885,7 @@ final class TransactionService
                     ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
                     ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
                     ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                    ->when($userId,            fn($q) => $q->where('user_id', $userId))
                     ->whereIn(DB::raw('DATE(created_at)'), $trendDates)
                     ->selectRaw('DATE(created_at) as date, currency_id, currency_code, COUNT(*) as count, SUM(gross_amount) as total_amount, SUM(fee_amount) as total_fees')
                     ->groupBy('date', 'currency_id', 'currency_code')
@@ -901,6 +907,7 @@ final class TransactionService
                 ->when($branchId,          fn($q) => $q->where('branch_id', $branchId))
                 ->when($currencyId,        fn($q) => $q->where('currency_id', $currencyId))
                 ->when($transactionTypeId, fn($q) => $q->where('transaction_type_id', $transactionTypeId))
+                ->when($userId,            fn($q) => $q->where('user_id', $userId))
                 ->with([
                     'branch:id,name,code,status',
                     'transactionType:id,name,code',
