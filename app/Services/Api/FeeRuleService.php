@@ -156,7 +156,6 @@ final class FeeRuleService
         $query = FeeRule::where('transaction_type_id', $transactionTypeId)
             ->where('is_active', true);
 
-        // Try to find the most specific rule first
         if ($operatorId && $branchId) {
             $rule = (clone $query)
                 ->where('operator_id', $operatorId)
@@ -181,7 +180,6 @@ final class FeeRuleService
             if ($rule) return $rule;
         }
 
-        // Finally, try to find a generic rule for the transaction type
         return $query
             ->whereNull('operator_id')
             ->whereNull('branch_id')
@@ -196,28 +194,24 @@ final class FeeRuleService
      */
     public function calculateFee(FeeRule $feeRule, float $amount): float
     {
-        $calculatedFee = 0;
+        $mode = $feeRule->fee_mode->value;
 
-        switch ($feeRule->fee_mode->value) {
-            case 'fixed':
-                $calculatedFee = (float) $feeRule->value;
-                break;
-            
-            case 'percentage':
-                $calculatedFee = ($amount * (float) $feeRule->value) / 100;
-                break;
-            
-            default:
-                $calculatedFee = 0;
-                break;
+        // Negotiable fee: the cashier enters the fee manually — return 0, no auto-constraint
+        if ($mode === 'negotiable') {
+            return 0.0;
         }
 
-        // Apply min_fee constraint
+        $calculatedFee = match ($mode) {
+            'fixed'      => (float) $feeRule->value,
+            'percentage' => ($amount * (float) $feeRule->value) / 100,
+            default      => 0.0,
+        };
+
+        // Apply min/max constraints (only for fixed and percentage modes)
         if ($feeRule->min_fee && $calculatedFee < (float) $feeRule->min_fee) {
             $calculatedFee = (float) $feeRule->min_fee;
         }
 
-        // Apply max_fee constraint
         if ($feeRule->max_fee && $calculatedFee > (float) $feeRule->max_fee) {
             $calculatedFee = (float) $feeRule->max_fee;
         }

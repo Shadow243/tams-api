@@ -18,6 +18,10 @@ enum NotificationType: string
     case BRANCH_BALANCE_UPDATED = 'branch_balance_updated';
     case WALLET_BALANCE_UPDATED = 'wallet_balance_updated';
 
+    // ── Customer account events ───────────────────────────────────────────
+    case CUSTOMER_ACCOUNT_DEPOSIT    = 'customer_account_deposit';
+    case CUSTOMER_ACCOUNT_WITHDRAWAL = 'customer_account_withdrawal';
+
     // ── System events ─────────────────────────────────────────────────────
     case SYSTEM_ALERT          = 'system_alert';
 
@@ -30,9 +34,11 @@ enum NotificationType: string
             self::TRANSACTION_CANCELLED => 'Transaction annulée',
             self::TRANSACTION_FAILED    => 'Transaction échouée',
             self::TRANSACTION_EXPIRED   => 'Transaction expirée',
-            self::BRANCH_BALANCE_UPDATED => 'Solde branche mis à jour',
-            self::WALLET_BALANCE_UPDATED => 'Solde wallet mis à jour',
-            self::SYSTEM_ALERT          => 'Alerte système',
+            self::BRANCH_BALANCE_UPDATED      => 'Solde branche mis à jour',
+            self::WALLET_BALANCE_UPDATED      => 'Solde wallet mis à jour',
+            self::CUSTOMER_ACCOUNT_DEPOSIT    => 'Dépôt compte client',
+            self::CUSTOMER_ACCOUNT_WITHDRAWAL => 'Retrait compte client',
+            self::SYSTEM_ALERT                => 'Alerte système',
         };
     }
 
@@ -46,9 +52,11 @@ enum NotificationType: string
             self::TRANSACTION_CANCELLED => 'secondary',
             self::TRANSACTION_FAILED    => 'danger',
             self::TRANSACTION_EXPIRED   => 'dark',
-            self::BRANCH_BALANCE_UPDATED => 'success',
-            self::WALLET_BALANCE_UPDATED => 'success',
-            self::SYSTEM_ALERT          => 'warning',
+            self::BRANCH_BALANCE_UPDATED      => 'success',
+            self::WALLET_BALANCE_UPDATED      => 'success',
+            self::CUSTOMER_ACCOUNT_DEPOSIT    => 'success',
+            self::CUSTOMER_ACCOUNT_WITHDRAWAL => 'warning',
+            self::SYSTEM_ALERT                => 'warning',
         };
     }
 
@@ -62,9 +70,11 @@ enum NotificationType: string
             self::TRANSACTION_CANCELLED => 'ti-x',
             self::TRANSACTION_FAILED    => 'ti-alert-circle',
             self::TRANSACTION_EXPIRED   => 'ti-clock-hour-4',
-            self::BRANCH_BALANCE_UPDATED => 'ti-cash',
-            self::WALLET_BALANCE_UPDATED => 'ti-wallet',
-            self::SYSTEM_ALERT          => 'ti-alert-triangle',
+            self::BRANCH_BALANCE_UPDATED      => 'ti-cash',
+            self::WALLET_BALANCE_UPDATED      => 'ti-wallet',
+            self::CUSTOMER_ACCOUNT_DEPOSIT    => 'ti-pig-money',
+            self::CUSTOMER_ACCOUNT_WITHDRAWAL => 'ti-pig-money',
+            self::SYSTEM_ALERT                => 'ti-alert-triangle',
         };
     }
 

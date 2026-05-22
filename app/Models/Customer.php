@@ -40,4 +40,20 @@ class Customer extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * Get the accounts for the customer.
+     */
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(CustomerAccount::class);
+    }
+
+    /**
+     * Get the active accounts for the customer.
+     */
+    public function activeAccounts(): HasMany
+    {
+        return $this->accounts()->where('status', 'active');
+    }
 }

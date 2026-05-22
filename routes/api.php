@@ -182,7 +182,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{transaction}', [TransactionController::class, 'update'])->middleware('permission:editer_transactions')->name('update');
         Route::patch('/{transaction}', [TransactionController::class, 'update'])->middleware('permission:editer_transactions');
         Route::delete('/{transaction}', [TransactionController::class, 'destroy'])->middleware('permission:supprimer_transactions')->name('destroy');
-        Route::patch('/{transaction}/cancel', [TransactionController::class, 'cancel'])->middleware('permission:editer_transactions')->name('cancel');
+        Route::patch('/{transaction}/cancel', [TransactionController::class, 'cancel'])->middleware('permission:annuler_transactions')->name('cancel');
         Route::patch('/{transaction}/complete', [TransactionController::class, 'complete'])->middleware('permission:editer_transactions')->name('complete');
         Route::patch('/{transaction}/change-status', [TransactionController::class, 'changeStatus'])->middleware('permission:editer_transactions')->name('change-status');
     });
@@ -227,5 +227,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/clear-read', [NotificationController::class, 'clearRead'])->name('clear-read');
         Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── Customer Accounts (VIP) ────────────────────────────────────────────
+    Route::prefix('customer-accounts')->name('customer-accounts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\CustomerAccountController::class, 'index'])->middleware('permission:lire_clients')->name('index');
+        Route::post('/', [\App\Http\Controllers\Api\CustomerAccountController::class, 'store'])->middleware('permission:creer_clients')->name('store');
+        Route::get('/dashboard-report', [\App\Http\Controllers\Api\CustomerAccountController::class, 'dashboardReport'])->middleware('permission:lire_clients')->name('dashboard-report');
+        Route::get('/customer/{customer}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'customerAccounts'])->middleware('permission:lire_clients')->name('customer.accounts');
+        Route::get('/{account}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'show'])->middleware('permission:lire_clients')->name('show');
+        Route::put('/{account}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'update'])->middleware('permission:editer_clients')->name('update');
+        Route::patch('/{account}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'update'])->middleware('permission:editer_clients');
+
+        // Account transactions/statement
+        Route::get('/{account}/transactions', [\App\Http\Controllers\Api\CustomerAccountController::class, 'transactions'])->middleware('permission:lire_clients')->name('transactions');
+
+        // Account operations
+        Route::post('/{account}/deposit', [\App\Http\Controllers\Api\CustomerAccountController::class, 'deposit'])->middleware('permission:creer_transactions')->name('deposit');
+        Route::post('/{account}/withdraw', [\App\Http\Controllers\Api\CustomerAccountController::class, 'withdraw'])->middleware('permission:creer_transactions')->name('withdraw');
+        Route::post('/{account}/adjust', [\App\Http\Controllers\Api\CustomerAccountController::class, 'adjust'])->middleware('permission:editer_clients')->name('adjust');
+
+        // Interest management
+        Route::post('/{account}/apply-interest', [\App\Http\Controllers\Api\CustomerAccountController::class, 'applyInterest'])->middleware('permission:editer_clients')->name('apply-interest');
+        Route::get('/{account}/simulate-interest', [\App\Http\Controllers\Api\CustomerAccountController::class, 'simulateInterest'])->middleware('permission:lire_clients')->name('simulate-interest');
+
+        // Interest settings
+        Route::get('/{account}/interest-settings', [\App\Http\Controllers\Api\AccountInterestSettingController::class, 'show'])->middleware('permission:lire_clients')->name('interest-settings.show');
+        Route::post('/{account}/interest-settings', [\App\Http\Controllers\Api\AccountInterestSettingController::class, 'store'])->middleware('permission:editer_clients')->name('interest-settings.store');
+        Route::delete('/{account}/interest-settings', [\App\Http\Controllers\Api\AccountInterestSettingController::class, 'destroy'])->middleware('permission:editer_clients')->name('interest-settings.destroy');
     });
 });

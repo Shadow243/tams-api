@@ -30,6 +30,8 @@ class TransactionType extends Model
         'dest_branch_amount',
         'dest_wallet_effect',
         'dest_wallet_amount',
+        'customer_account_effect',
+        'customer_account_amount',
     ];
 
     /**

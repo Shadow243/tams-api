@@ -56,6 +56,7 @@ class TransactionRequest extends FormRequest
             ],
             'wallet_id' => $this->walletIdRules('wallet_effect'),
             'dest_wallet_id' => $this->walletIdRules('dest_wallet_effect', 'different:wallet_id'),
+            'customer_account_id' => $this->customerAccountIdRules(),
             'dest_customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'currency_id' => [
                 'nullable',
@@ -147,6 +148,17 @@ class TransactionRequest extends FormRequest
             : ['nullable', 'integer', 'exists:wallets,id'];
 
         return array_merge($base, $extra);
+    }
+
+    private function customerAccountIdRules(): array
+    {
+        $typeId = $this->input('transaction_type_id');
+        $type = $typeId ? TransactionType::find($typeId) : null;
+        $needsAccount = $this->isMethod('POST') && $type && ($type->customer_account_effect ?? 'none') !== 'none';
+
+        return $needsAccount
+            ? ['required', 'integer', 'exists:customer_accounts,id']
+            : ['nullable', 'integer', 'exists:customer_accounts,id'];
     }
 
     /**

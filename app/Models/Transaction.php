@@ -39,6 +39,7 @@ class Transaction extends Model
         'served_by_branch_id',
         'customer_id',
         'dest_customer_id',
+        'customer_account_id',
         'wallet_id',
         'dest_wallet_id',
         'customer_phone',
@@ -162,6 +163,11 @@ class Transaction extends Model
     public function destWallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class, 'dest_wallet_id');
+    }
+
+    public function customerAccount(): BelongsTo
+    {
+        return $this->belongsTo(CustomerAccount::class);
     }
 
     /**

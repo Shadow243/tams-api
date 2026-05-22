@@ -11,6 +11,7 @@ use App\Models\FeeRule;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\BalanceUpdateNotification;
+use App\Services\CustomerAccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -279,7 +280,7 @@ final class TransactionService
 
         return DB::transaction(function () use ($transaction) {
             // Load necessary relationships
-            $transaction->load(['transactionType', 'branch', 'destinationBranch', 'wallet', 'destWallet', 'currency']);
+            $transaction->load(['transactionType', 'branch', 'destinationBranch', 'wallet', 'destWallet', 'currency', 'customerAccount']);
             
             // Update balances based on transaction type
             $this->updateBalances($transaction);
@@ -366,6 +367,21 @@ final class TransactionService
                 $destWalletEffect === 'debit' ? -$delta : $delta,
                 $transaction
             );
+        }
+
+        // ── Customer TAMS account ────────────────────────────────────────
+        $accountEffect = $type->customer_account_effect ?? 'none';
+        if ($accountEffect !== 'none' && $transaction->customerAccount) {
+            $delta  = $resolve($type->customer_account_amount ?? 'gross');
+            $user   = auth()->user();
+            $desc   = "Transaction {$transaction->reference}";
+            $svc    = app(CustomerAccountService::class);
+
+            if ($accountEffect === 'credit') {
+                $svc->deposit($transaction->customerAccount, $delta, $user, $desc, $transaction);
+            } else {
+                $svc->withdraw($transaction->customerAccount, $delta, $user, $desc, $transaction);
+            }
         }
     }
 

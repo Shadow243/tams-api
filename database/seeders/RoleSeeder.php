@@ -19,7 +19,12 @@ class RoleSeeder extends Seeder
     {
         app()['cache']->forget('spatie.permission.cache');
 
-        $roles = [['name' => 'admin','description' => 'Administrator'], ['name' => 'caissier','description' => 'Cashier'], ['name' => 'superviseur','description' => 'Supervisor']];
+        $roles = [
+            ['name' => 'admin',       'description' => 'Administrator'],
+            ['name' => 'superviseur', 'description' => 'Superviseur'],
+            ['name' => 'caissier',    'description' => 'Caissier'],
+            ['name' => 'agent',       'description' => 'Agent'],
+        ];
 
         $modules = [
             'Apps',
@@ -27,231 +32,140 @@ class RoleSeeder extends Seeder
             'Utilisateurs',
         ];
 
-        $prefixes = [
-            'lire',
-            'creer',
-            'editer',
-            'supprimer',
-        ];
+        $prefixes = ['lire', 'creer', 'editer', 'supprimer'];
 
-        $caissierGroups = [
+        $buildPermissions = function (array $groups) use ($prefixes): array {
+            $permissions = [];
+            foreach ($groups as $group) {
+                $suffix = trim(str_replace('gerer ', '', $group['name']));
+                $permissions[] = ['name' => $group['name'],               'group' => $suffix, 'module_name' => $group['module_name']];
+                foreach ($prefixes as $prefix) {
+                    $permissions[] = ['name' => $prefix . '_' . $suffix,  'group' => $suffix, 'module_name' => $group['module_name']];
+                }
+            }
+            return $permissions;
+        };
+
+        // ── Agent ─────────────────────────────────────────────────────────────
+        // Effectuer les transactions, tirer son rapport journalier,
+        // voir ses données sur l'accueil, voir les transactions en attente.
+        $agentPermissions = array_merge(
+            $buildPermissions([
+                ['name' => 'gerer transactions', 'module_name' => $modules[0]],
+                ['name' => 'gerer clients',      'module_name' => $modules[0]],
+            ]),
             [
-                'name' => 'gerer transactions',
-                'module_name' => $modules[0]
-            ],
-            [
-                'name' => 'gerer clients',
-                'module_name' => $modules[0]
+                ['name' => 'lire_rapports',     'group' => 'rapports',     'module_name' => $modules[0]],
+                ['name' => 'lire_tableau_bord', 'group' => 'tableau_bord', 'module_name' => $modules[0]],
             ]
-        ];
+        );
 
-        $caissierPermissions = [];
-
-        foreach ($caissierGroups as $cGroup) {
-            $suffix = trim(str_replace('gerer ', '', $cGroup['name']));
-
-            $caissierPermissions[] = [
-                'name' => $cGroup['name'],
-                'group' => $suffix,
-                'module_name' => $cGroup['module_name']
-            ];
-
-            $caissierPermissions = array_merge(
-                $caissierPermissions,
-                array_map(function ($prefix) use ($suffix, $cGroup) {
-                    return [
-                        'name' => $prefix . '_' . $suffix,
-                        'group' => $suffix,
-                        'module_name' => $cGroup['module_name']
-                    ];
-                }, $prefixes)
-            );
-        }
-
-        $superviseurGroups = [
+        // ── Caissier ──────────────────────────────────────────────────────────
+        // Charger le ravitaillement interne + compléter des transactions.
+        $caissierPermissions = array_merge(
+            $buildPermissions([
+                ['name' => 'gerer ravitaillements', 'module_name' => $modules[0]],
+            ]),
             [
-                'name' => 'gerer validations',
-                'module_name' => $modules[0]
-            ],
-            [
-                'name' => 'gerer demandes',
-                'module_name' => $modules[0]
-            ],
-            [
-                'name' => 'gerer rapports',
-                'module_name' => $modules[0]
-            ],
-            [
-                'name' => 'gerer devises',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer networks',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer operateurs',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer guichets',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer portefeuilles',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer types_operations',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer frais',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer pays',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer branches',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer operateurs',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer impressions',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer types_operations',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer regles_frais',
-                'module_name' => $modules[1]
+                // Lecture contexte dashboard
+                ['name' => 'lire_transactions',       'group' => 'transactions',    'module_name' => $modules[0]],
+                ['name' => 'lire_clients',            'group' => 'clients',         'module_name' => $modules[0]],
+                ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',   'module_name' => $modules[1]],
+                ['name' => 'lire_branches',           'group' => 'branches',        'module_name' => $modules[1]],
+                ['name' => 'lire_types_operations',   'group' => 'types_operations','module_name' => $modules[1]],
+                // Compléter une transaction (ravitaillement → paiement sortant)
+                ['name' => 'editer_transactions',     'group' => 'transactions',    'module_name' => $modules[0]],
             ]
-        ];
+        );
 
-        $superviseurPermissions = [];
-
-        foreach ($superviseurGroups as $sGroup) {
-            $suffix = trim(str_replace('gerer ', '', $sGroup['name']));
-
-            $superviseurPermissions[] = [
-                'name' => $sGroup['name'],
-                'group' => $suffix,
-                'module_name' => $sGroup['module_name']
-            ];
-
-            $superviseurPermissions = array_merge(
-                $superviseurPermissions,
-                array_map(function ($prefix) use ($suffix, $sGroup) {
-                    return [
-                        'name' => $prefix . '_' . $suffix,
-                        'group' => $suffix,
-                        'module_name' => $sGroup['module_name']
-                    ];
-                }, $prefixes)
-            );
-        }
-
-        $adminGroups = [ //ADMIN
+        // ── Superviseur ───────────────────────────────────────────────────────
+        // Tirer les rapports par Agent et audit, annuler une transaction.
+        $superviseurPermissions = array_merge(
+            $buildPermissions([
+                ['name' => 'gerer rapports',    'module_name' => $modules[0]],
+                ['name' => 'gerer validations', 'module_name' => $modules[0]],
+                ['name' => 'gerer demandes',    'module_name' => $modules[0]],
+            ]),
             [
-                'name' => 'gerer logs',
-                'module_name' => $modules[1]
-            ],
-            [
-                'name' => 'gerer roles',
-                'module_name' => $modules[2]
-            ],
-            [
-                'name' => 'gerer permissions',
-                'module_name' => $modules[2]
-            ],
-            [
-                'name' => 'gerer utilisateurs',
-                'module_name' => $modules[2]
-            ],
-            [
-                'name' => 'gerer impressions',
-                'module_name' => $modules[1]
+                ['name' => 'lire_logs',             'group' => 'logs',            'module_name' => $modules[1]],
+                // Annuler une transaction (route dédiée)
+                ['name' => 'annuler_transactions',  'group' => 'transactions',    'module_name' => $modules[0]],
+                // Lecture nécessaire au fonctionnement du dashboard
+                ['name' => 'lire_transactions',     'group' => 'transactions',    'module_name' => $modules[0]],
+                ['name' => 'lire_clients',          'group' => 'clients',         'module_name' => $modules[0]],
+                ['name' => 'lire_branches',         'group' => 'branches',        'module_name' => $modules[1]],
+                ['name' => 'lire_types_operations', 'group' => 'types_operations','module_name' => $modules[1]],
+                ['name' => 'lire_portefeuilles',    'group' => 'portefeuilles',   'module_name' => $modules[1]],
             ]
-        ];
+        );
 
-        $adminPermissions = array_merge($caissierPermissions, $superviseurPermissions, [
+        // ── Admin ─────────────────────────────────────────────────────────────
+        // All of the above + full configuration + user management.
+        $adminPermissions = array_merge(
+            $agentPermissions,
+            $caissierPermissions,
+            $superviseurPermissions,
+            $buildPermissions([
+                ['name' => 'gerer logs',             'module_name' => $modules[1]],
+                ['name' => 'gerer devises',          'module_name' => $modules[1]],
+                ['name' => 'gerer networks',         'module_name' => $modules[1]],
+                ['name' => 'gerer operateurs',       'module_name' => $modules[1]],
+                ['name' => 'gerer guichets',         'module_name' => $modules[1]],
+                ['name' => 'gerer portefeuilles',    'module_name' => $modules[1]],
+                ['name' => 'gerer types_operations', 'module_name' => $modules[1]],
+                ['name' => 'gerer frais',            'module_name' => $modules[1]],
+                ['name' => 'gerer pays',             'module_name' => $modules[1]],
+                ['name' => 'gerer branches',         'module_name' => $modules[1]],
+                ['name' => 'gerer impressions',      'module_name' => $modules[1]],
+                ['name' => 'gerer regles_frais',     'module_name' => $modules[1]],
+                ['name' => 'gerer roles',            'module_name' => $modules[2]],
+                ['name' => 'gerer permissions',      'module_name' => $modules[2]],
+                ['name' => 'gerer utilisateurs',     'module_name' => $modules[2]],
+            ]),
             [
-                'name' => 'read_timelines',
-                'group' => 'timelines',
-                'module_name' => $modules[2]
-            ],
-        ]);
+                ['name' => 'read_timelines', 'group' => 'timelines', 'module_name' => $modules[2]],
+            ]
+        );
 
-        foreach ($adminGroups as $aGroup) {
-            $suffix = trim(str_replace('gerer ', '', $aGroup['name']));
-            $adminPermissions[] = [
-                'name' => $aGroup['name'],
-                'group' => $suffix,
-                'module_name' => $aGroup['module_name']
-            ];
-            $adminPermissions = array_merge(
-                $adminPermissions,
-                array_map(function ($prefix) use ($suffix, $aGroup) {
-                    return [
-                        'name' => $prefix . '_' . $suffix,
-                        'group' => $suffix,
-                        'module_name' => $aGroup['module_name']
-                    ];
-                }, $prefixes)
-            );
-        }
-
-        // Save permission names for caissier and superviseur before merging
-        $caissierPermissionNames = collect($caissierPermissions)->pluck('name')->toArray();
-        $superviseurPermissionNames = collect($superviseurPermissions)->pluck('name')->toArray();
-
-        // Create all permissions - deduplicate by name and use proper firstOrCreate
         $allPermissions = collect($adminPermissions)
             ->unique('name')
-            ->map(function ($perm) {
-                return Permission::firstOrCreate(
-                    ['name' => $perm['name']], // search criteria (matches unique constraint)
-                    $perm // default attributes if creating new record
-                );
-            });
+            ->map(fn($perm) => Permission::firstOrCreate(['name' => $perm['name']], $perm));
 
-        // dd($allPermissions);
+        $agentPermissionNames       = collect($agentPermissions)->pluck('name')->unique()->toArray();
+        $caissierPermissionNames    = collect($caissierPermissions)->pluck('name')->unique()->toArray();
+        $superviseurPermissionNames = collect($superviseurPermissions)->pluck('name')->unique()->toArray();
 
         $adminRole = null;
-        foreach ($roles as $role) {
-            $role = Role::firstOrCreate(['name' => $role['name']], $role);
-            if ($role->name === 'admin') {
-                $role->givePermissionTo($allPermissions);
-                $adminRole = $role;
-            } elseif ($role->name === 'caissier') {
-                $role->givePermissionTo($caissierPermissionNames);
-            } elseif ($role->name === 'superviseur') {
-                $role->givePermissionTo($superviseurPermissionNames);
-            }
+        foreach ($roles as $roleData) {
+            $role = Role::firstOrCreate(['name' => $roleData['name']], $roleData);
+
+            match ($role->name) {
+                'admin'       => (function () use ($role, $allPermissions, &$adminRole) {
+                    $role->syncPermissions($allPermissions);
+                    $adminRole = $role;
+                })(),
+                'superviseur' => $role->syncPermissions($superviseurPermissionNames),
+                'caissier'    => $role->syncPermissions($caissierPermissionNames),
+                'agent'       => $role->syncPermissions($agentPermissionNames),
+                default       => null,
+            };
         }
 
         $admin = User::updateOrCreate(
             ['email' => config('mail.admin')],
             [
-                'uuid' => (new User)->newUniqueId(),
-                'name' => 'TAMS ADMIN',
-                'username' => 'admin',
-                'gender' => 'M',
-                'password' => Hash::make('pct*2MQ$X0pya@zkh4ekb'),
-                'country_code' => 243,
-                'phone_number' => '979575151',
-                'timezone' => 'Africa/Harare',
-                'locale' => 'fr',
-                'email_verified_at' => now(),
-                'active' => true,
-                'remember_token' => Str::random(10)
+                'uuid'             => (new User)->newUniqueId(),
+                'name'             => 'TAMS ADMIN',
+                'username'         => 'admin',
+                'gender'           => 'M',
+                'password'         => Hash::make('pct*2MQ$X0pya@zkh4ekb'),
+                'country_code'     => 243,
+                'phone_number'     => '979575151',
+                'timezone'         => 'Africa/Harare',
+                'locale'           => 'fr',
+                'email_verified_at'=> now(),
+                'active'           => true,
+                'remember_token'   => Str::random(10),
             ]
         );
 
