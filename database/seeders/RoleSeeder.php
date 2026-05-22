@@ -73,7 +73,8 @@ class RoleSeeder extends Seeder
                 ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',   'module_name' => $modules[1]],
                 ['name' => 'lire_branches',           'group' => 'branches',        'module_name' => $modules[1]],
                 ['name' => 'lire_types_operations',   'group' => 'types_operations','module_name' => $modules[1]],
-                // Compléter une transaction (ravitaillement → paiement sortant)
+                // Créer + compléter une transaction de ravitaillement
+                ['name' => 'creer_transactions',      'group' => 'transactions',    'module_name' => $modules[0]],
                 ['name' => 'editer_transactions',     'group' => 'transactions',    'module_name' => $modules[0]],
             ]
         );
