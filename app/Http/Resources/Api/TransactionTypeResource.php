@@ -28,8 +28,10 @@ class TransactionTypeResource extends JsonResource
             'wallet_amount' => $this->wallet_amount ?? 'gross',
             'dest_branch_effect'  => $this->dest_branch_effect ?? 'none',
             'dest_branch_amount'  => $this->dest_branch_amount ?? 'gross',
-            'dest_wallet_effect'  => $this->dest_wallet_effect ?? 'none',
-            'dest_wallet_amount'  => $this->dest_wallet_amount ?? 'gross',
+            'dest_wallet_effect'      => $this->dest_wallet_effect ?? 'none',
+            'dest_wallet_amount'      => $this->dest_wallet_amount ?? 'gross',
+            'customer_account_effect' => $this->customer_account_effect ?? 'none',
+            'requires_dest_customer'  => (bool) ($this->requires_dest_customer ?? false),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

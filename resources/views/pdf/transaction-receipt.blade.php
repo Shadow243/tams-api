@@ -262,16 +262,16 @@
     <div class="amounts">
         <div class="amount-row">
             <span class="amount-lbl">Montant brut</span>
-            <span class="amount-val gross">{{ $fmt($transaction->gross_amount) }} {{ $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
+            <span class="amount-val gross">{{ $fmt($transaction->gross_amount) }} {{ $transaction->currency?->symbol ?? $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
         </div>
         <div class="amount-row">
             <span class="amount-lbl">Frais</span>
-            <span class="amount-val fee">− {{ $fmt($transaction->fee_amount) }} {{ $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
+            <span class="amount-val fee">− {{ $fmt($transaction->fee_amount) }} {{ $transaction->currency?->symbol ?? $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
         </div>
     </div>
     <div class="net-total">
         <span class="nt-label">Montant Net</span>
-        <span class="nt-value">{{ $fmt($transaction->net_amount) }} {{ $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
+        <span class="nt-value">{{ $fmt($transaction->net_amount) }} {{ $transaction->currency?->symbol ?? $transaction->currency?->code ?? $transaction->currency_code ?? 'XAF' }}</span>
     </div>
 
     <!-- Description / Note -->

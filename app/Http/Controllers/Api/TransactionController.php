@@ -173,7 +173,7 @@ class TransactionController extends Controller
                 $model->save();
             }
 
-            $model->load(['transactionType', 'branch', 'user', 'customer']);
+            $model->load(['transactionType', 'branch', 'destinationBranch', 'user', 'customer', 'destCustomer', 'wallet', 'destWallet', 'currency']);
 
             return $this->sendResponse(
                 new TransactionResource($model),

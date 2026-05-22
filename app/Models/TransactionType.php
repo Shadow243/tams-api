@@ -32,23 +32,16 @@ class TransactionType extends Model
         'dest_wallet_amount',
         'customer_account_effect',
         'customer_account_amount',
+        'requires_dest_customer',
     ];
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'transaction_types';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
-        return [];
+        return [
+            'requires_dest_customer' => 'boolean',
+        ];
     }
 
     /**
