@@ -18,10 +18,17 @@ class BalanceReportController extends Controller
         // Calculate pending balance impacts from pending transactions
         $pendingImpacts = $this->calculatePendingImpacts();
 
+        $user = auth()->user();
+        $restrictedBranchId = ($user && $user->branch_id && $user->hasAnyRole(['agent', 'caissier']))
+            ? $user->branch_id
+            : null;
+
         // Get branches with current balances
-        $branches = Branch::with(['balances.currency'])
-            ->orderBy('name')
-            ->get()
+        $branchQuery = Branch::with(['balances.currency'])->orderBy('name');
+        if ($restrictedBranchId) {
+            $branchQuery->where('id', $restrictedBranchId);
+        }
+        $branches = $branchQuery->get()
             ->map(function($branch) use ($pendingImpacts) {
                 return [
                     'id'       => $branch->id,
@@ -46,9 +53,12 @@ class BalanceReportController extends Controller
             });
 
         // Get wallets with current balances
-        $wallets = Wallet::with(['branch:id,name', 'operator:id,name', 'currency:id,code,symbol,name'])
-            ->orderBy('wallet_number')
-            ->get()
+        $walletQuery = Wallet::with(['branch:id,name', 'operator:id,name', 'currency:id,code,symbol,name'])
+            ->orderBy('wallet_number');
+        if ($restrictedBranchId) {
+            $walletQuery->where('branch_id', $restrictedBranchId);
+        }
+        $wallets = $walletQuery->get()
             ->map(function($wallet) use ($pendingImpacts) {
                 $currencyCode = $wallet->currency?->code;
                 $pendingAmount = $pendingImpacts['wallets'][$wallet->id][$currencyCode] ?? 0.0;
