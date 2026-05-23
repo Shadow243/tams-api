@@ -55,8 +55,13 @@ class RoleSeeder extends Seeder
                 ['name' => 'gerer clients',      'module_name' => $modules[0]],
             ]),
             [
-                ['name' => 'lire_rapports',     'group' => 'rapports',     'module_name' => $modules[0]],
-                ['name' => 'lire_tableau_bord', 'group' => 'tableau_bord', 'module_name' => $modules[0]],
+                ['name' => 'lire_rapports',           'group' => 'rapports',         'module_name' => $modules[0]],
+                ['name' => 'lire_tableau_bord',       'group' => 'tableau_bord',     'module_name' => $modules[0]],
+                // Lecture nécessaire pour remplir le formulaire de transaction
+                ['name' => 'lire_types_operations',   'group' => 'types_operations', 'module_name' => $modules[1]],
+                ['name' => 'lire_branches',           'group' => 'branches',         'module_name' => $modules[1]],
+                ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',    'module_name' => $modules[1]],
+                ['name' => 'lire_devises',            'group' => 'devises',          'module_name' => $modules[1]],
             ]
         );
 
