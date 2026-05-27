@@ -54,7 +54,8 @@ class TransactionController extends Controller
             'destCustomer',
             'wallet',
             'destWallet',
-            'feeRule'
+            'feeRule',
+            'currency',
         ]);
 
         return $this->sendResponse(
@@ -89,8 +90,9 @@ class TransactionController extends Controller
             'wallet',
             'destWallet',
             'feeRule',
+            'currency',
             'parentTransaction',
-            'childTransactions'
+            'childTransactions',
         ]);
         
         return $this->sendData(new TransactionResource($transaction));
@@ -123,7 +125,8 @@ class TransactionController extends Controller
             'destCustomer',
             'wallet',
             'destWallet',
-            'feeRule'
+            'feeRule',
+            'currency',
         ]);
 
         return $this->sendResponse(
