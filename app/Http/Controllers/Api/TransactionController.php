@@ -42,7 +42,11 @@ class TransactionController extends Controller
      */
     public function store(TransactionRequest $request)
     {
-        $model = $this->service->create($request->validated());
+        try {
+            $model = $this->service->create($request->validated());
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 422);
+        }
 
         // Load relationships
         $model->load([
@@ -113,7 +117,11 @@ class TransactionController extends Controller
             );
         }
 
-        $model = $this->service->update($transaction, $request->validated());
+        try {
+            $model = $this->service->update($transaction, $request->validated());
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 422);
+        }
 
         // Load relationships
         $model->load([
@@ -197,7 +205,11 @@ class TransactionController extends Controller
 
         $request->validate(['description' => ['nullable', 'string', 'max:1000']]);
 
-        $model = $this->service->complete($transaction);
+        try {
+            $model = $this->service->complete($transaction);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 422);
+        }
 
         if ($request->filled('description')) {
             $model->description = $request->input('description');
