@@ -102,7 +102,7 @@ class CustomerController extends Controller
     public function findByPhone(Request $request): JsonResponse
     {
         $request->validate([
-            'phone' => 'required|string|regex:/^237[0-9]{9}$/',
+            'phone' => 'required|string|regex:/^[0-9]{7,15}$/',
         ]);
 
         $customer = $this->customerService->findByPhone($request->phone);

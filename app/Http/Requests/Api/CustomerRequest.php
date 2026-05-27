@@ -30,7 +30,7 @@ class CustomerRequest extends FormRequest
             'phone' => [
                 'required',
                 'string',
-                'regex:/^243[0-9]{9}$/',
+                'regex:/^[0-9]{7,15}$/',
                 'unique:customers,phone,' . $customerId,
             ],
             'national_id' => [
