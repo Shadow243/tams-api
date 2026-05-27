@@ -598,24 +598,26 @@ final class TransactionService
 
         // Validate wallet debit
         if (($transactionType->wallet_effect ?? 'none') === 'debit' && $wallet) {
-            $required = $resolve($transactionType->wallet_amount ?? 'gross');
-            if ($wallet->virtual_balance < $required) {
+            $required      = $resolve($transactionType->wallet_amount ?? 'gross');
+            $walletBalance = (float) $wallet->virtual_balance;
+            if ($walletBalance < $required) {
                 throw new \Exception(__('Insufficient virtual balance in wallet :number. Required: :required, Available: :balance', [
                     'number'   => $wallet->wallet_number ?? $wallet->id,
                     'required' => number_format($required, 2),
-                    'balance'  => number_format($wallet->virtual_balance, 2),
+                    'balance'  => number_format($walletBalance, 2),
                 ]));
             }
         }
 
         // Validate destination wallet debit
         if (($transactionType->dest_wallet_effect ?? 'none') === 'debit' && $destWallet) {
-            $required = $resolve($transactionType->dest_wallet_amount ?? 'gross');
-            if ($destWallet->virtual_balance < $required) {
+            $required          = $resolve($transactionType->dest_wallet_amount ?? 'gross');
+            $destWalletBalance = (float) $destWallet->virtual_balance;
+            if ($destWalletBalance < $required) {
                 throw new \Exception(__('Insufficient virtual balance in destination wallet :number. Required: :required, Available: :balance', [
                     'number'   => $destWallet->wallet_number ?? $destWallet->id,
                     'required' => number_format($required, 2),
-                    'balance'  => number_format($destWallet->virtual_balance, 2),
+                    'balance'  => number_format($destWalletBalance, 2),
                 ]));
             }
         }
