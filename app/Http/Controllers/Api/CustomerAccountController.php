@@ -67,10 +67,10 @@ class CustomerAccountController extends Controller
             });
         }
 
-        // Sort
+        // Sort: always group by customer first, then by the requested field
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $query->orderBy('customer_id', 'asc')->orderBy($sortBy, $sortOrder);
 
         $perPage = $request->get('per_page', 15);
         $accounts = $query->paginate($perPage);
