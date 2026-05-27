@@ -36,11 +36,11 @@ class CustomerAccountService
         ?int $branchId = null
     ): AccountTransaction {
         if ($amount <= 0) {
-            throw new \InvalidArgumentException('Le montant du dépôt doit être positif.');
+            throw new \InvalidArgumentException(__('messages.account_deposit_amount_positive'));
         }
 
         if (!$account->isActive()) {
-            throw new \Exception('Le compte n\'est pas actif.');
+            throw new \Exception(__('messages.account_not_active'));
         }
 
         $branchId = $branchId ?? $user->branch_id;
@@ -107,22 +107,19 @@ class CustomerAccountService
         ?int $branchId = null
     ): AccountTransaction {
         if ($amount <= 0) {
-            throw new \InvalidArgumentException('Le montant du retrait doit être positif.');
+            throw new \InvalidArgumentException(__('messages.account_withdraw_amount_positive'));
         }
 
         if (!$account->isActive()) {
-            throw new \Exception('Le compte n\'est pas actif.');
+            throw new \Exception(__('messages.account_not_active'));
         }
 
         if (!$account->hasSufficientBalance($amount)) {
-            throw new \Exception(
-                sprintf(
-                    'Solde insuffisant. Solde disponible: %.2f (solde: %.2f + crédit: %.2f)',
-                    $account->available_balance,
-                    $account->balance,
-                    $account->credit_limit
-                )
-            );
+            throw new \Exception(__('messages.account_insufficient_balance', [
+                'available' => number_format((float) $account->available_balance, 2),
+                'balance'   => number_format((float) $account->balance, 2),
+                'credit'    => number_format((float) $account->credit_limit, 2),
+            ]));
         }
 
         $branchId = $branchId ?? $user->branch_id;
@@ -206,13 +203,12 @@ class CustomerAccountService
         $newBalance  = $current + $delta;
 
         if ($newBalance < 0) {
-            throw new \Exception(sprintf(
-                'Solde de caisse insuffisant en %s pour l\'agence %s (disponible: %s, requis: %s)',
-                $currencyCode,
-                $branch->name,
-                number_format($current, 2),
-                number_format(abs($delta), 2)
-            ));
+            throw new \Exception(__('messages.account_insufficient_branch_cash', [
+                'currency'  => $currencyCode,
+                'name'      => $branch->name,
+                'available' => number_format($current, 2),
+                'required'  => number_format(abs($delta), 2),
+            ]));
         }
 
         $balance->update(['cash_balance' => $newBalance]);
@@ -229,7 +225,7 @@ class CustomerAccountService
     public function applyInterest(CustomerAccount $account, User $user): ?AccountTransaction
     {
         if (!$account->isActive()) {
-            throw new \Exception('Le compte n\'est pas actif.');
+            throw new \Exception(__('messages.account_not_active'));
         }
 
         $interestSettings = $account->interestSettings;
@@ -316,11 +312,11 @@ class CustomerAccountService
         string $description
     ): AccountTransaction {
         if ($amount == 0) {
-            throw new \InvalidArgumentException('Le montant de l\'ajustement ne peut pas être zéro.');
+            throw new \InvalidArgumentException(__('messages.account_adjustment_amount_nonzero'));
         }
 
         if (!$account->isActive()) {
-            throw new \Exception('Le compte n\'est pas actif.');
+            throw new \Exception(__('messages.account_not_active'));
         }
 
         return DB::transaction(function () use ($account, $amount, $user, $description) {

@@ -270,7 +270,7 @@ final class TransactionService
     public function cancel(Transaction $transaction): Transaction
     {
         if (!$transaction->canBeCancelled()) {
-            throw new \Exception(__('This transaction cannot be cancelled'));
+            throw new \Exception(__('messages.transaction_cannot_be_cancelled'));
         }
 
         return $this->changeStatus($transaction, TransactionStatus::CANCELLED);
@@ -415,13 +415,12 @@ final class TransactionService
         
         // Check for negative balance
         if ($newBalance < 0) {
-            throw new \Exception(sprintf(
-                'Insufficient %s cash balance in branch %s. Required: %s, Available: %s',
-                $currencyCode,
-                $branch->name,
-                number_format(abs($amount), 2),
-                number_format($currentBalance, 2)
-            ));
+            throw new \Exception(__('messages.insufficient_branch_balance', [
+                'currency'  => $currencyCode,
+                'name'      => $branch->name,
+                'required'  => number_format(abs($amount), 2),
+                'balance'   => number_format($currentBalance, 2),
+            ]));
         }
         
         // Update balance
@@ -455,9 +454,9 @@ final class TransactionService
         
         // Check for negative balance
         if ($newBalance < 0) {
-            throw new \Exception(__('Insufficient virtual balance in wallet :number. Available: :balance', [
-                'number' => $wallet->wallet_number,
-                'balance' => number_format($currentBalance, 2)
+            throw new \Exception(__('messages.insufficient_wallet_balance', [
+                'number'  => $wallet->wallet_number,
+                'balance' => number_format($currentBalance, 2),
             ]));
         }
         
@@ -573,7 +572,7 @@ final class TransactionService
             $required  = $resolve($transactionType->branch_amount ?? 'gross');
             $available = $branch->getBalance($currency);
             if ($available < $required) {
-                throw new \Exception(__('Insufficient :currency cash balance in branch :name. Required: :required, Available: :balance', [
+                throw new \Exception(__('messages.insufficient_branch_balance', [
                     'currency' => $currency,
                     'name'     => $branch->name,
                     'required' => number_format($required, 2),
@@ -587,7 +586,7 @@ final class TransactionService
             $required  = $resolve($transactionType->dest_branch_amount ?? 'gross');
             $available = $destinationBranch->getBalance($currency);
             if ($available < $required) {
-                throw new \Exception(__('Insufficient :currency cash balance in destination branch :name. Required: :required, Available: :balance', [
+                throw new \Exception(__('messages.insufficient_dest_branch_balance', [
                     'currency' => $currency,
                     'name'     => $destinationBranch->name,
                     'required' => number_format($required, 2),
@@ -601,7 +600,7 @@ final class TransactionService
             $required      = $resolve($transactionType->wallet_amount ?? 'gross');
             $walletBalance = (float) $wallet->virtual_balance;
             if ($walletBalance < $required) {
-                throw new \Exception(__('Insufficient virtual balance in wallet :number. Required: :required, Available: :balance', [
+                throw new \Exception(__('messages.insufficient_wallet_balance_required', [
                     'number'   => $wallet->wallet_number ?? $wallet->id,
                     'required' => number_format($required, 2),
                     'balance'  => number_format($walletBalance, 2),
@@ -614,7 +613,7 @@ final class TransactionService
             $required          = $resolve($transactionType->dest_wallet_amount ?? 'gross');
             $destWalletBalance = (float) $destWallet->virtual_balance;
             if ($destWalletBalance < $required) {
-                throw new \Exception(__('Insufficient virtual balance in destination wallet :number. Required: :required, Available: :balance', [
+                throw new \Exception(__('messages.insufficient_dest_wallet_balance', [
                     'number'   => $destWallet->wallet_number ?? $destWallet->id,
                     'required' => number_format($required, 2),
                     'balance'  => number_format($destWalletBalance, 2),
