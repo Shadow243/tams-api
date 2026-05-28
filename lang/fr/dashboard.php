@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 return [
     // Page
-    'title'       => 'Tableau de bord',
-    'description' => 'Vue globale du système de transfert',
+    'title'               => 'Tableau de bord',
+    'description'         => 'Vue globale du système de transfert',
+    'description_agent'   => 'Vos transactions et votre agence',
+    'my_data'             => 'Mes données',
+    'my_branch'           => 'Mon agence',
+    'my_wallets_report'   => 'Rapport de mes wallets',
+    'balance_report_agent'=> 'Mes soldes',
+    'by_wallet'           => 'Par wallet',
+    'transactions_count'  => 'Nombre de transactions',
 
     // KPI labels
     'total'              => 'Total',

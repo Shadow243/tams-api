@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\Configs\WalletController;
 use App\Http\Controllers\Api\Users\UserController;
 use App\Http\Controllers\Api\Users\SessionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Roles\RoleController;
+use App\Http\Controllers\Api\Roles\PermissionController;
 use App\Http\Resources\Api\UserResource;
 
 Route::get('/user', function (Request $request) {
@@ -215,6 +217,27 @@ Route::middleware('auth:sanctum')->group(function () {
         // Wallet assignment for agents
         Route::get('{user}/wallets', [UserController::class, 'wallets'])->middleware('permission:lire_utilisateurs')->name('wallets');
         Route::put('{user}/wallets', [UserController::class, 'syncWallets'])->middleware('permission:editer_utilisateurs')->name('sync-wallets');
+        // Direct permissions for a user
+        Route::get('{user}/permissions', [UserController::class, 'getDirectPermissions'])->middleware('permission:editer_utilisateurs')->name('user-permissions');
+        Route::put('{user}/permissions', [UserController::class, 'syncDirectPermissions'])->middleware('permission:editer_utilisateurs')->name('sync-user-permissions');
+    });
+
+    // ── Roles & Permissions ────────────────────────────────────────────────
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', [RoleController::class, 'index'])->middleware('permission:lire_roles')->name('index');
+        Route::post('/', [RoleController::class, 'store'])->middleware('permission:creer_roles')->name('store');
+        Route::get('/{role}', [RoleController::class, 'show'])->middleware('permission:lire_roles')->name('show');
+        Route::put('/{role}', [RoleController::class, 'update'])->middleware('permission:editer_roles')->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->middleware('permission:supprimer_roles')->name('destroy');
+        Route::put('/{role}/permissions', [RoleController::class, 'syncPermissions'])->middleware('permission:editer_roles')->name('sync-permissions');
+    });
+
+    Route::prefix('permissions')->name('permissions.')->group(function () {
+        Route::get('/', [PermissionController::class, 'index'])->middleware('permission:lire_permissions')->name('index');
+        Route::post('/', [PermissionController::class, 'store'])->middleware('permission:creer_permissions')->name('store');
+        Route::get('/{permission}', [PermissionController::class, 'show'])->middleware('permission:lire_permissions')->name('show');
+        Route::put('/{permission}', [PermissionController::class, 'update'])->middleware('permission:editer_permissions')->name('update');
+        Route::delete('/{permission}', [PermissionController::class, 'destroy'])->middleware('permission:supprimer_permissions')->name('destroy');
     });
 
     // ── Balance Report ─────────────────────────────────────────────────────

@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 return [
     // Page
-    'title'       => 'Dashboard',
-    'description' => 'Global overview of the transfer system',
+    'title'               => 'Dashboard',
+    'description'         => 'Global overview of the transfer system',
+    'description_agent'   => 'Your transactions and your branch',
+    'my_data'             => 'My data',
+    'my_branch'           => 'My branch',
+    'my_wallets_report'   => 'My wallets report',
+    'balance_report_agent'=> 'My balances',
+    'by_wallet'           => 'By wallet',
+    'transactions_count'  => 'Number of transactions',
 
     // KPI labels
     'total'             => 'Total',

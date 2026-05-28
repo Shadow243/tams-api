@@ -10,6 +10,7 @@ use App\Http\Resources\Api\UserResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -267,5 +268,36 @@ class UserController extends Controller
         $user->wallets()->sync($request->input('wallet_ids', []));
 
         return $this->sendMessage(__('Wallets mis à jour avec succès.'));
+    }
+
+    /**
+     * Get the direct (non-role) permissions of a user.
+     */
+    public function getDirectPermissions(User $user)
+    {
+        return $this->sendData([
+            'direct_permissions'  => $user->getDirectPermissions()->values(),
+            'role_permissions'    => $user->getPermissionsViaRoles()->values(),
+        ]);
+    }
+
+    /**
+     * Replace the direct permissions of a user.
+     */
+    public function syncDirectPermissions(Request $request, User $user)
+    {
+        $request->validate([
+            'permission_ids'   => 'required|array',
+            'permission_ids.*' => 'integer|exists:permissions,id',
+        ]);
+
+        $permissions = Permission::whereIn('id', $request->input('permission_ids'))->get();
+        $user->syncPermissions($permissions);
+
+        app()['cache']->forget('spatie.permission.cache');
+
+        return $this->sendData([
+            'direct_permissions' => $user->getDirectPermissions()->values(),
+        ]);
     }
 }

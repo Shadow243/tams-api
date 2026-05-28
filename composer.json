@@ -22,6 +22,7 @@
         "outhebox/laravel-translations": "*",
         "saloonphp/cache-plugin": "*",
         "saloonphp/laravel-http-sender": "*",
+        "spatie/laravel-backup": "*",
         "spatie/laravel-csp": "*",
         "spatie/laravel-deleted-models": "*",
         "spatie/laravel-permission": "*",
