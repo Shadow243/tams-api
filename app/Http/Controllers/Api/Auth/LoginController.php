@@ -31,15 +31,20 @@ final class LoginController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::findByEmailOrPhone($data['login']);
-        if (! $user) {
-            return $this->sendErrorResponse(__('auth.failed'));
-        }
+        $user = User::withoutGlobalScope(\App\Scopes\ActiveScope::class)
+            ->where(function ($q) use ($data) {
+                $q->where('email', $data['login'])
+                  ->orWhere('phone_number', get_parsed_phone_number($data['login']));
+            })->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'message' => [__('auth.failed')],
             ]);
+        }
+
+        if (! $user->active) {
+            return $this->sendErrorResponse(__('auth.account_disabled'), 403);
         }
         
         // Check if 2FA is enabled

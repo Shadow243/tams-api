@@ -6,6 +6,7 @@ return [
     'email_not_verified' => 'Email not verified.',
     'email_verified' => 'Email verified.',
     'failed' => 'These credentials do not match our records.',
+    'account_disabled' => 'This account has been disabled. Please contact an administrator.',
     'invalid_role' => 'The selected account type is invalid.',
     'invalid_verification_code' => 'Invalid verification code.',
     'logged_out' => 'Logged out successfully.',

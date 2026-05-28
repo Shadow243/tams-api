@@ -6,6 +6,7 @@ return [
     'email_not_verified' => 'E-mail non vérifié.',
     'email_verified' => 'E-mail vérifié.',
     'failed' => 'Ces identifiants ne correspondent pas à nos enregistrements.',
+    'account_disabled' => 'Ce compte a été désactivé. Veuillez contacter un administrateur.',
     'invalid_role' => 'Le type de compte sélectionné n\'est pas valide.',
     'invalid_verification_code' => 'Code de vérification non valide.',
     'logged_out' => 'Déconnecté avec succès.',

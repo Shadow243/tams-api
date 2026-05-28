@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Api\User;
 
 use App\Models\User;
+use App\Scopes\ActiveScope;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -69,7 +70,7 @@ final class UserService
      */
     public function getUsers(Request $request)
     {
-        $query = User::query();
+        $query = User::withoutGlobalScope(ActiveScope::class);
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -83,7 +84,7 @@ final class UserService
         if ($request->has('active')) {
             $active = $request->input('active');
             if ($active === '1' || $active === '0') {
-                $query->where('active', (bool) $active);
+                $query->where('active', (int) $active);
             }
         }
 
@@ -114,6 +115,10 @@ final class UserService
 
         if (isset($data['active'])) {
             $updateData['active'] = (bool) $data['active'];
+        }
+
+        if (isset($data['is_email_verified'])) {
+            $updateData['email_verified_at'] = $data['is_email_verified'] ? now() : null;
         }
 
         if (array_key_exists('branch_id', $data)) {
@@ -164,7 +169,7 @@ final class UserService
      */
     public function exportToPDF(Request $request)
     {
-        $query = User::query();
+        $query = User::withoutGlobalScope(ActiveScope::class);
 
         // Apply same filters as getUsers method
         if ($request->has('search')) {
@@ -179,7 +184,7 @@ final class UserService
         if ($request->has('active')) {
             $active = $request->input('active');
             if ($active === '1' || $active === '0') {
-                $query->where('active', (bool) $active);
+                $query->where('active', (int) $active);
             }
         }
 

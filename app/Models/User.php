@@ -20,6 +20,7 @@ use App\Casts\TimezoneAwareDateTime;
 use Laravel\Sanctum\HasApiTokens;
 use App\Observers\UserObserver;
 use Illuminate\Support\Str;
+use App\Scopes\ActiveScope;
 use App\Traits\Activable;
 use App\Traits\HasUuid;
 use App\Concerns\Media\HasMedia;
@@ -65,6 +66,17 @@ final class User extends Authenticatable implements HasLocalePreference
         'two_factor_secret',
         'two_factor_recovery_codes',
     ];
+
+    /**
+     * Bypass ActiveScope when resolving route model binding so inactive users
+     * can still be fetched/edited by admins.
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return $this->withoutGlobalScope(ActiveScope::class)
+            ->where($field ?? $this->getRouteKeyName(), $value)
+            ->firstOrFail();
+    }
 
     /**
      * Boot the model.
