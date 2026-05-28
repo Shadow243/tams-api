@@ -59,6 +59,8 @@ class TransactionTypeRequest extends FormRequest
             'dest_wallet_amount'  => ['nullable', 'string', Rule::in(['gross', 'net', 'fee'])],
             'customer_account_effect' => ['nullable', 'string', Rule::in(['none', 'debit', 'credit'])],
             'customer_account_amount' => ['nullable', 'string', Rule::in(['gross', 'net', 'fee'])],
+            'requires_dest_customer'  => ['nullable', 'boolean'],
+            'requires_customer'       => ['nullable', 'boolean'],
         ];
     }
 

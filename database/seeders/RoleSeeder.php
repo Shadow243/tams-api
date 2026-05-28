@@ -55,13 +55,16 @@ class RoleSeeder extends Seeder
                 ['name' => 'gerer clients',      'module_name' => $modules[0]],
             ]),
             [
-                ['name' => 'lire_rapports',           'group' => 'rapports',         'module_name' => $modules[0]],
-                ['name' => 'lire_tableau_bord',       'group' => 'tableau_bord',     'module_name' => $modules[0]],
+                ['name' => 'lire_rapports',             'group' => 'rapports',           'module_name' => $modules[0]],
+                ['name' => 'lire_tableau_bord',         'group' => 'tableau_bord',       'module_name' => $modules[0]],
+                // Opérations sur comptes clients
+                ['name' => 'deposer_comptes_clients',   'group' => 'comptes_clients',    'module_name' => $modules[0]],
+                ['name' => 'retirer_comptes_clients',   'group' => 'comptes_clients',    'module_name' => $modules[0]],
                 // Lecture nécessaire pour remplir le formulaire de transaction
-                ['name' => 'lire_types_operations',   'group' => 'types_operations', 'module_name' => $modules[1]],
-                ['name' => 'lire_branches',           'group' => 'branches',         'module_name' => $modules[1]],
-                ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',    'module_name' => $modules[1]],
-                ['name' => 'lire_devises',            'group' => 'devises',          'module_name' => $modules[1]],
+                ['name' => 'lire_types_operations',     'group' => 'types_operations',   'module_name' => $modules[1]],
+                ['name' => 'lire_branches',             'group' => 'branches',           'module_name' => $modules[1]],
+                ['name' => 'lire_portefeuilles',        'group' => 'portefeuilles',      'module_name' => $modules[1]],
+                ['name' => 'lire_devises',              'group' => 'devises',            'module_name' => $modules[1]],
             ]
         );
 
@@ -73,19 +76,23 @@ class RoleSeeder extends Seeder
             ]),
             [
                 // Lecture contexte dashboard
-                ['name' => 'lire_transactions',       'group' => 'transactions',    'module_name' => $modules[0]],
-                ['name' => 'lire_clients',            'group' => 'clients',         'module_name' => $modules[0]],
-                ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',   'module_name' => $modules[1]],
-                ['name' => 'lire_branches',           'group' => 'branches',        'module_name' => $modules[1]],
-                ['name' => 'lire_types_operations',   'group' => 'types_operations','module_name' => $modules[1]],
+                ['name' => 'lire_transactions',         'group' => 'transactions',      'module_name' => $modules[0]],
+                ['name' => 'lire_clients',              'group' => 'clients',           'module_name' => $modules[0]],
+                ['name' => 'lire_portefeuilles',        'group' => 'portefeuilles',     'module_name' => $modules[1]],
+                ['name' => 'lire_branches',             'group' => 'branches',          'module_name' => $modules[1]],
+                ['name' => 'lire_types_operations',     'group' => 'types_operations',  'module_name' => $modules[1]],
                 // Créer + compléter une transaction de ravitaillement
-                ['name' => 'creer_transactions',      'group' => 'transactions',    'module_name' => $modules[0]],
-                ['name' => 'editer_transactions',     'group' => 'transactions',    'module_name' => $modules[0]],
+                ['name' => 'creer_transactions',        'group' => 'transactions',      'module_name' => $modules[0]],
+                ['name' => 'editer_transactions',       'group' => 'transactions',      'module_name' => $modules[0]],
+                // Opérations sur comptes clients
+                ['name' => 'deposer_comptes_clients',   'group' => 'comptes_clients',   'module_name' => $modules[0]],
+                ['name' => 'retirer_comptes_clients',   'group' => 'comptes_clients',   'module_name' => $modules[0]],
             ]
         );
 
         // ── Superviseur ───────────────────────────────────────────────────────
-        // Tirer les rapports par Agent et audit, annuler une transaction.
+        // Tirer les rapports par Agent et audit, annuler une transaction,
+        // gérer les opérations sur les comptes clients.
         $superviseurPermissions = array_merge(
             $buildPermissions([
                 ['name' => 'gerer rapports',    'module_name' => $modules[0]],
@@ -93,15 +100,18 @@ class RoleSeeder extends Seeder
                 ['name' => 'gerer demandes',    'module_name' => $modules[0]],
             ]),
             [
-                ['name' => 'lire_logs',             'group' => 'logs',            'module_name' => $modules[1]],
+                ['name' => 'lire_logs',               'group' => 'logs',              'module_name' => $modules[1]],
                 // Annuler une transaction (route dédiée)
-                ['name' => 'annuler_transactions',  'group' => 'transactions',    'module_name' => $modules[0]],
+                ['name' => 'annuler_transactions',    'group' => 'transactions',      'module_name' => $modules[0]],
                 // Lecture nécessaire au fonctionnement du dashboard
-                ['name' => 'lire_transactions',     'group' => 'transactions',    'module_name' => $modules[0]],
-                ['name' => 'lire_clients',          'group' => 'clients',         'module_name' => $modules[0]],
-                ['name' => 'lire_branches',         'group' => 'branches',        'module_name' => $modules[1]],
-                ['name' => 'lire_types_operations', 'group' => 'types_operations','module_name' => $modules[1]],
-                ['name' => 'lire_portefeuilles',    'group' => 'portefeuilles',   'module_name' => $modules[1]],
+                ['name' => 'lire_transactions',       'group' => 'transactions',      'module_name' => $modules[0]],
+                ['name' => 'lire_clients',            'group' => 'clients',           'module_name' => $modules[0]],
+                ['name' => 'lire_branches',           'group' => 'branches',          'module_name' => $modules[1]],
+                ['name' => 'lire_types_operations',   'group' => 'types_operations',  'module_name' => $modules[1]],
+                ['name' => 'lire_portefeuilles',      'group' => 'portefeuilles',     'module_name' => $modules[1]],
+                // Opérations sur comptes clients VIP/standard
+                ['name' => 'deposer_comptes_clients', 'group' => 'comptes_clients',   'module_name' => $modules[0]],
+                ['name' => 'retirer_comptes_clients', 'group' => 'comptes_clients',   'module_name' => $modules[0]],
             ]
         );
 
@@ -157,24 +167,24 @@ class RoleSeeder extends Seeder
             };
         }
 
-        $admin = User::updateOrCreate(
-            ['email' => config('mail.admin')],
-            [
-                'uuid'             => (new User)->newUniqueId(),
-                'name'             => 'TAMS ADMIN',
-                'username'         => 'admin',
-                'gender'           => 'M',
-                'password'         => Hash::make('pct*2MQ$X0pya@zkh4ekb'),
-                'country_code'     => 243,
-                'phone_number'     => '979575151',
-                'timezone'         => 'Africa/Harare',
-                'locale'           => 'fr',
-                'email_verified_at'=> now(),
-                'active'           => true,
-                'remember_token'   => Str::random(10),
-            ]
-        );
+        // $admin = User::updateOrCreate(
+        //     ['email' => config('mail.admin')],
+        //     [
+        //         'uuid'             => (new User)->newUniqueId(),
+        //         'name'             => 'TAMS ADMIN',
+        //         'username'         => 'admin',
+        //         'gender'           => 'M',
+        //         'password'         => Hash::make('pct*2MQ$X0pya@zkh4ekb'),
+        //         'country_code'     => 243,
+        //         'phone_number'     => '979575151',
+        //         'timezone'         => 'Africa/Harare',
+        //         'locale'           => 'fr',
+        //         'email_verified_at'=> now(),
+        //         'active'           => true,
+        //         'remember_token'   => Str::random(10),
+        //     ]
+        // );
 
-        $admin->assignRole($adminRole);
+        // $admin->assignRole($adminRole);
     }
 }

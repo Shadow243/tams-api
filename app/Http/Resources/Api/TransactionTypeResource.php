@@ -32,6 +32,7 @@ class TransactionTypeResource extends JsonResource
             'dest_wallet_amount'      => $this->dest_wallet_amount ?? 'gross',
             'customer_account_effect' => $this->customer_account_effect ?? 'none',
             'requires_dest_customer'  => (bool) ($this->requires_dest_customer ?? false),
+            'requires_customer'       => (bool) ($this->requires_customer ?? true),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

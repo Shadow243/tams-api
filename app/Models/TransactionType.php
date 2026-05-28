@@ -33,6 +33,7 @@ class TransactionType extends Model
         'customer_account_effect',
         'customer_account_amount',
         'requires_dest_customer',
+        'requires_customer',
     ];
 
     protected $table = 'transaction_types';
@@ -41,6 +42,7 @@ class TransactionType extends Model
     {
         return [
             'requires_dest_customer' => 'boolean',
+            'requires_customer'      => 'boolean',
         ];
     }
 

@@ -246,8 +246,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{account}/transactions', [\App\Http\Controllers\Api\CustomerAccountController::class, 'transactions'])->middleware('permission:lire_clients')->name('transactions');
 
         // Account operations
-        Route::post('/{account}/deposit', [\App\Http\Controllers\Api\CustomerAccountController::class, 'deposit'])->middleware('permission:creer_transactions')->name('deposit');
-        Route::post('/{account}/withdraw', [\App\Http\Controllers\Api\CustomerAccountController::class, 'withdraw'])->middleware('permission:creer_transactions')->name('withdraw');
+        Route::post('/{account}/deposit', [\App\Http\Controllers\Api\CustomerAccountController::class, 'deposit'])->middleware('permission:deposer_comptes_clients')->name('deposit');
+        Route::post('/{account}/withdraw', [\App\Http\Controllers\Api\CustomerAccountController::class, 'withdraw'])->middleware('permission:retirer_comptes_clients')->name('withdraw');
         Route::post('/{account}/adjust', [\App\Http\Controllers\Api\CustomerAccountController::class, 'adjust'])->middleware('permission:editer_clients')->name('adjust');
 
         // Interest management

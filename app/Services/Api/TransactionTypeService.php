@@ -65,6 +65,10 @@ class TransactionTypeService
                 'dest_branch_amount' => $data['dest_branch_amount'] ?? 'gross',
                 'dest_wallet_effect' => $data['dest_wallet_effect'] ?? 'none',
                 'dest_wallet_amount' => $data['dest_wallet_amount'] ?? 'gross',
+                'customer_account_effect' => $data['customer_account_effect'] ?? 'none',
+                'customer_account_amount' => $data['customer_account_amount'] ?? 'gross',
+                'requires_dest_customer' => $data['requires_dest_customer'] ?? false,
+                'requires_customer' => $data['requires_customer'] ?? true,
             ]);
         });
     }
@@ -87,6 +91,10 @@ class TransactionTypeService
                 'dest_branch_amount' => $data['dest_branch_amount'] ?? $transactionType->dest_branch_amount,
                 'dest_wallet_effect' => $data['dest_wallet_effect'] ?? $transactionType->dest_wallet_effect,
                 'dest_wallet_amount' => $data['dest_wallet_amount'] ?? $transactionType->dest_wallet_amount,
+                'customer_account_effect' => $data['customer_account_effect'] ?? $transactionType->customer_account_effect,
+                'customer_account_amount' => $data['customer_account_amount'] ?? $transactionType->customer_account_amount,
+                'requires_dest_customer' => $data['requires_dest_customer'] ?? $transactionType->requires_dest_customer,
+                'requires_customer' => $data['requires_customer'] ?? $transactionType->requires_customer,
             ]);
 
             return $transactionType->fresh();

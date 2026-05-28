@@ -366,7 +366,7 @@ class CustomerAccountService
         ?\Carbon\Carbon $from = null,
         ?\Carbon\Carbon $to = null
     ) {
-        $query = $account->transactions()->with('user');
+        $query = $account->transactions()->with(['user', 'branch']);
 
         if ($from) {
             $query->where('created_at', '>=', $from);
