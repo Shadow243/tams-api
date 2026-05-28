@@ -13,6 +13,9 @@ return [
     'statusInactive' => 'Inactif',
     'statusSuspended' => 'Suspendu',
     'addUser' => 'Ajouter un utilisateur',
+    'editUser' => 'Modifier l\'utilisateur',
+    'add_new_user' => 'Ajouter un utilisateur',
+    'page_title' => 'Gestion des Utilisateurs',
     'noResults' => 'Aucun utilisateur trouvé',
     'showing' => 'Affichage de',
     'to' => 'à',
@@ -21,6 +24,10 @@ return [
     'edit' => 'Modifier',
     'elementsPerPage' => 'Éléments par page',
     'users_list' => 'Liste des Utilisateurs',
+    'export' => 'Exporter',
+    'exportCSV' => 'Exporter CSV',
+    'exportPDF' => 'Exporter PDF',
+    'exporting' => 'Exportation...',
 
     // Tableau
     'table' => [
@@ -34,7 +41,7 @@ return [
         'actions' => 'Actions',
     ],
 
-    // Formulaire
+    // Formulaire (clés manquantes dans le formulaire)
     'form' => [
         'basicInfo' => 'Informations de Base',
         'infoTitle' => 'Informations utilisateur',
@@ -77,14 +84,21 @@ return [
         'active' => 'Compte Actif',
         'isActive' => 'Actif',
         'save' => 'Enregistrer',
+        'branch' => 'Agence',
+        'selectBranch' => 'Sélectionner une Agence',
+        'role' => 'Rôle',
+        'selectRole' => 'Sélectionner un Rôle',
+        'wallets' => 'Wallets assignés',
+        'no_wallets' => 'Aucun wallet disponible.',
+        'select_branch_first' => 'Sélectionnez une agence pour voir les wallets.',
         'cancel' => 'Annuler',
         'update' => 'Mettre à jour',
         'create' => 'Créer',
         'submit' => 'Soumettre',
     ],
 
-    // Export
-    'export' => [
+    // PDF Export (données utilisées par le template PDF côté serveur)
+    'pdf_export' => [
         'generated_on' => 'Généré le',
         'total_users' => 'Total Utilisateurs',
         'page' => 'Page',

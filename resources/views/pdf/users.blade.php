@@ -271,7 +271,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">{{ __('users.export.no_data') }}</td>
+                    <td colspan="8" class="text-center">{{ __('users.pdf_export.no_data') }}</td>
                 </tr>
             @endforelse
         </tbody>

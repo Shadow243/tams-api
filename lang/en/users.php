@@ -13,6 +13,9 @@ return [
     'statusInactive' => 'Inactive',
     'statusSuspended' => 'Suspended',
     'addUser' => 'Add User',
+    'editUser' => 'Edit User',
+    'add_new_user' => 'Add New User',
+    'page_title' => 'Users Management',
     'noResults' => 'No users found',
     'showing' => 'Showing',
     'to' => 'to',
@@ -21,6 +24,10 @@ return [
     'edit' => 'Edit',
     'elementsPerPage' => 'Elements per page',
     'users_list' => 'Users List',
+    'export' => 'Export',
+    'exportCSV' => 'Export CSV',
+    'exportPDF' => 'Export PDF',
+    'exporting' => 'Exporting...',
 
     // Table
     'table' => [
@@ -77,14 +84,21 @@ return [
         'active' => 'Active Account',
         'isActive' => 'Active',
         'save' => 'Save',
+        'branch' => 'Branch',
+        'selectBranch' => 'Select Branch',
+        'role' => 'Role',
+        'selectRole' => 'Select Role',
+        'wallets' => 'Assigned Wallets',
+        'no_wallets' => 'No wallet available.',
+        'select_branch_first' => 'Select a branch to see wallets.',
         'cancel' => 'Cancel',
         'update' => 'Update',
         'create' => 'Create',
         'submit' => 'Submit',
     ],
 
-    // Export
-    'export' => [
+    // PDF Export (used by server-side PDF template)
+    'pdf_export' => [
         'generated_on' => 'Generated on',
         'total_users' => 'Total Users',
         'page' => 'Page',
