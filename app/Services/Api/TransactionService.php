@@ -63,7 +63,7 @@ final class TransactionService
                 }
             }
 
-            $data['id'] = (new Transaction)->newUniqueId();
+            $uuid = (new Transaction)->newUniqueId();
 
             // Calculate net amount
             $data['net_amount'] = (float) $data['gross_amount'] - (float) $data['fee_amount'];
@@ -71,7 +71,11 @@ final class TransactionService
             // Validate balances before creating transaction
             $this->validateBalancesBeforeCreate($data);
 
-            return Transaction::create($data);
+            $transaction = new Transaction($data);
+            $transaction->id = $uuid;
+            $transaction->save();
+
+            return $transaction;
         });
     }
 

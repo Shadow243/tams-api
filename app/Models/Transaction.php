@@ -22,6 +22,10 @@ class Transaction extends Model
 {
     use HasFactory, HasUuid, KeepsDeletedModels;
 
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -29,7 +33,6 @@ class Transaction extends Model
      */
     protected $fillable = [
         'uuid',
-        'id',
         'reference',
         'transaction_type_id',
         'branch_id',

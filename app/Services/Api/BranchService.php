@@ -62,7 +62,7 @@ final class BranchService
      */
     public function getBranches(Request $request)
     {
-        $perPage = min((int) $request->input('per_page', 10), 100);
+        $perPage = min((int) $request->input('per_page', 10), 200);
         $search = $request->input('search');
         $status = $request->input('status');
         $countryId = $request->input('country_id');

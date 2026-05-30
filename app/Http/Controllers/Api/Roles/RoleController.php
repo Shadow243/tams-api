@@ -9,15 +9,21 @@ use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
     public function index(): JsonResponse
     {
-        $roles = Role::with('permissions')
-            ->withCount('users')
-            ->orderBy('name')
-            ->get();
+        $roles = Role::with('permissions')->orderBy('name')->get();
+
+        $table  = config('permission.table_names.model_has_roles', 'model_has_roles');
+        $counts = DB::table($table)
+            ->select('role_id', DB::raw('count(*) as cnt'))
+            ->groupBy('role_id')
+            ->pluck('cnt', 'role_id');
+
+        $roles->each(fn ($role) => $role->users_count = $counts[$role->id] ?? 0);
 
         return $this->sendData(['data' => $roles]);
     }
@@ -67,7 +73,10 @@ class RoleController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
-        if ($role->users()->count() > 0) {
+        $table      = config('permission.table_names.model_has_roles', 'model_has_roles');
+        $usersCount = DB::table($table)->where('role_id', $role->id)->count();
+
+        if ($usersCount > 0) {
             return $this->sendErrorResponse(__('roles.has_users'), 422);
         }
 

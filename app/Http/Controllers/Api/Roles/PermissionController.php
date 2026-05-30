@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PermissionController extends Controller
 {
@@ -75,8 +76,11 @@ class PermissionController extends Controller
 
     public function destroy(Permission $permission): JsonResponse
     {
-        $rolesCount = $permission->roles()->count();
-        $usersCount = $permission->users()->count();
+        $rolePermTable = config('permission.table_names.role_has_permissions', 'role_has_permissions');
+        $userPermTable = config('permission.table_names.model_has_permissions', 'model_has_permissions');
+
+        $rolesCount = DB::table($rolePermTable)->where('permission_id', $permission->id)->count();
+        $usersCount = DB::table($userPermTable)->where('permission_id', $permission->id)->count();
 
         if ($rolesCount > 0 || $usersCount > 0) {
             return $this->sendErrorResponse(

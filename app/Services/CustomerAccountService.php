@@ -54,8 +54,10 @@ class CustomerAccountService
 
             $account->update(['balance' => $balanceAfter]);
 
-            // Branch receives cash (credit) when client deposits into TAMS account
-            if ($branchId) {
+            // Branch cash is only updated for standalone deposits.
+            // When called from a transaction completion, TransactionService::updateBalances()
+            // already handles branch cash via branch_effect — updating it here would double-count.
+            if ($branchId && $transaction === null) {
                 $this->updateBranchCash($branchId, $amount, $account->currency?->code ?? 'CDF');
             }
 
@@ -133,8 +135,10 @@ class CustomerAccountService
 
             $account->update(['balance' => $balanceAfter]);
 
-            // Branch gives out cash (debit) when client withdraws from TAMS account
-            if ($branchId) {
+            // Branch cash is only updated for standalone withdrawals.
+            // When called from a transaction completion, TransactionService::updateBalances()
+            // already handles branch cash via branch_effect — updating it here would double-count.
+            if ($branchId && $transaction === null) {
                 $this->updateBranchCash($branchId, -$amount, $account->currency?->code ?? 'CDF');
             }
 
