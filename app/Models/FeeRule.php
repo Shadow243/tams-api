@@ -24,10 +24,13 @@ class FeeRule extends Model
         'transaction_type_id',
         'operator_id',
         'branch_id',
+        'destination_branch_id',
         'fee_mode',
         'value',
         'min_fee',
         'max_fee',
+        'min_amount',
+        'max_amount',
         'is_active',
     ];
 
@@ -50,6 +53,8 @@ class FeeRule extends Model
             'value' => 'decimal:2',
             'min_fee' => 'decimal:2',
             'max_fee' => 'decimal:2',
+            'min_amount' => 'decimal:2',
+            'max_amount' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -76,6 +81,14 @@ class FeeRule extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Get the destination branch for the fee rule.
+     */
+    public function destinationBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'destination_branch_id');
     }
 
     /**

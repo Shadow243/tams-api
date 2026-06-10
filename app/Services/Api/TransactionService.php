@@ -655,7 +655,9 @@ final class TransactionService
         $feeRule = $feeRuleService->getApplicableFeeRule(
             $data['transaction_type_id'],
             $data['operator_id'] ?? null,
-            $data['branch_id']
+            $data['branch_id'] ?? null,
+            $data['destination_branch_id'] ?? null,
+            isset($data['gross_amount']) ? (float) $data['gross_amount'] : null
         );
 
         if (!$feeRule) {
@@ -703,7 +705,9 @@ final class TransactionService
         $feeRule = $feeRuleService->getApplicableFeeRule(
             $data['transaction_type_id'],
             $data['operator_id'] ?? null,
-            $data['branch_id']
+            $data['branch_id'] ?? null,
+            $data['destination_branch_id'] ?? null,
+            isset($data['gross_amount']) ? (float) $data['gross_amount'] : null
         );
 
         if (!$feeRule) {

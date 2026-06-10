@@ -29,11 +29,17 @@ class FeeRuleResource extends JsonResource
             'branch' => $this->relationLoaded('branch') && $this->branch
                 ? new BranchResource($this->branch)
                 : null,
+            'destination_branch_id' => $this->destination_branch_id,
+            'destination_branch' => $this->relationLoaded('destinationBranch') && $this->destinationBranch
+                ? new BranchResource($this->destinationBranch)
+                : null,
             'fee_mode' => $this->fee_mode->value,
             'fee_mode_label' => $this->fee_mode->label(),
             'value' => $this->value,
             'min_fee' => $this->min_fee,
             'max_fee' => $this->max_fee,
+            'min_amount' => $this->min_amount,
+            'max_amount' => $this->max_amount,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

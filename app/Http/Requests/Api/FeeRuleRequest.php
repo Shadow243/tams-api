@@ -44,6 +44,11 @@ class FeeRuleRequest extends FormRequest
                 'integer',
                 'exists:branches,id',
             ],
+            'destination_branch_id' => [
+                'nullable',
+                'integer',
+                'exists:branches,id',
+            ],
             'fee_mode' => [
                 'required',
                 'string',
@@ -77,6 +82,28 @@ class FeeRuleRequest extends FormRequest
                 function ($attribute, $value, $fail) {
                     if ($value !== null && $this->min_fee !== null && $value <= $this->min_fee) {
                         $fail(__('Maximum fee must be greater than minimum fee'));
+                    }
+                },
+            ],
+            'min_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:999999999.99',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $this->max_amount !== null && $value >= $this->max_amount) {
+                        $fail(__('Minimum amount must be less than maximum amount'));
+                    }
+                },
+            ],
+            'max_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:999999999.99',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $this->min_amount !== null && $value <= $this->min_amount) {
+                        $fail(__('Maximum amount must be greater than minimum amount'));
                     }
                 },
             ],

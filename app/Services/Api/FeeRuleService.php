@@ -65,11 +65,11 @@ final class FeeRuleService
         $isActive = $request->input('is_active');
 
         $query = FeeRule::query()
-            ->with(['transactionType', 'operator', 'branch'])
+            ->with(['transactionType', 'operator', 'branch', 'destinationBranch'])
             ->select([
                 'id', 'uuid', 'transaction_type_id', 'operator_id', 'branch_id',
-                'fee_mode', 'value', 'min_fee', 'max_fee', 'is_active',
-                'created_at', 'updated_at'
+                'destination_branch_id', 'fee_mode', 'value', 'min_fee', 'max_fee',
+                'min_amount', 'max_amount', 'is_active', 'created_at', 'updated_at',
             ]);
 
         // Apply search filter
@@ -136,54 +136,81 @@ final class FeeRuleService
     }
 
     /**
-     * Get applicable fee rule for a transaction
+     * Get applicable fee rule for a transaction.
+     *
+     * Each nullable field on a rule (operator_id, branch_id, destination_branch_id,
+     * min/max_amount) means "applies to all values". When a value is provided here,
+     * rules with an exact match OR with NULL on that field are both candidates.
+     * The most specific matching rule (most non-null fields) wins.
+     *
      * @param int $transactionTypeId
      * @param int|null $operatorId
-     * @param int|null $branchId
+     * @param int|null $branchId           Source branch
+     * @param int|null $destinationBranchId
+     * @param float|null $amount           Gross transaction amount for range matching
      * @return FeeRule|null
      */
     public function getApplicableFeeRule(
         int $transactionTypeId,
         ?int $operatorId = null,
-        ?int $branchId = null
+        ?int $branchId = null,
+        ?int $destinationBranchId = null,
+        ?float $amount = null
     ): ?FeeRule {
-        // Priority order:
-        // 1. Specific to transaction type, operator, and branch
-        // 2. Specific to transaction type and operator
-        // 3. Specific to transaction type and branch
-        // 4. Specific to transaction type only
-
         $query = FeeRule::where('transaction_type_id', $transactionTypeId)
             ->where('is_active', true);
 
-        if ($operatorId && $branchId) {
-            $rule = (clone $query)
-                ->where('operator_id', $operatorId)
-                ->where('branch_id', $branchId)
-                ->first();
-            if ($rule) return $rule;
+        // Operator: exact match OR rule has no operator restriction
+        $query->where(function ($q) use ($operatorId) {
+            if ($operatorId !== null) {
+                $q->where('operator_id', $operatorId)->orWhereNull('operator_id');
+            } else {
+                $q->whereNull('operator_id');
+            }
+        });
+
+        // Source branch: exact match OR rule has no source branch restriction
+        $query->where(function ($q) use ($branchId) {
+            if ($branchId !== null) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            } else {
+                $q->whereNull('branch_id');
+            }
+        });
+
+        // Destination branch: exact match OR rule has no destination branch restriction
+        $query->where(function ($q) use ($destinationBranchId) {
+            if ($destinationBranchId !== null) {
+                $q->where('destination_branch_id', $destinationBranchId)
+                  ->orWhereNull('destination_branch_id');
+            } else {
+                $q->whereNull('destination_branch_id');
+            }
+        });
+
+        // Amount range: the transaction amount must fall within the rule's range,
+        // or the rule has no amount range restriction.
+        if ($amount !== null) {
+            $query->where(function ($q) use ($amount) {
+                $q->where(function ($inner) use ($amount) {
+                    $inner->whereNull('min_amount')->orWhere('min_amount', '<=', $amount);
+                })->where(function ($inner) use ($amount) {
+                    $inner->whereNull('max_amount')->orWhere('max_amount', '>=', $amount);
+                });
+            });
+        } else {
+            $query->whereNull('min_amount')->whereNull('max_amount');
         }
 
-        if ($operatorId) {
-            $rule = (clone $query)
-                ->where('operator_id', $operatorId)
-                ->whereNull('branch_id')
-                ->first();
-            if ($rule) return $rule;
-        }
+        // Most specific rule wins: count non-null constraint fields descending
+        $query->orderByRaw('
+            (CASE WHEN operator_id IS NOT NULL THEN 2 ELSE 0 END) +
+            (CASE WHEN branch_id IS NOT NULL THEN 4 ELSE 0 END) +
+            (CASE WHEN destination_branch_id IS NOT NULL THEN 4 ELSE 0 END) +
+            (CASE WHEN min_amount IS NOT NULL OR max_amount IS NOT NULL THEN 2 ELSE 0 END) DESC
+        ');
 
-        if ($branchId) {
-            $rule = (clone $query)
-                ->where('branch_id', $branchId)
-                ->whereNull('operator_id')
-                ->first();
-            if ($rule) return $rule;
-        }
-
-        return $query
-            ->whereNull('operator_id')
-            ->whereNull('branch_id')
-            ->first();
+        return $query->first();
     }
 
     /**
