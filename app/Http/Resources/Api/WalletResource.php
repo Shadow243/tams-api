@@ -14,6 +14,11 @@ class WalletResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+        $canSeeBalance = !$user
+            || !$user->hasRole('agent')
+            || $user->branch_id === $this->branch_id;
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -22,7 +27,7 @@ class WalletResource extends JsonResource
             'operator_id' => $this->operator_id,
             'operator' => new OperatorResource($this->whenLoaded('operator')),
             'wallet_number' => $this->wallet_number,
-            'virtual_balance' => $this->virtual_balance,
+            'virtual_balance' => $canSeeBalance ? $this->virtual_balance : null,
             'currency_id' => $this->currency_id,
             'currency' => new CurrencyResource($this->whenLoaded('currency')),
             'formatted_balance' => $this->formatted_balance,

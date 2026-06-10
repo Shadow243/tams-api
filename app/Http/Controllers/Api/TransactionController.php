@@ -158,6 +158,13 @@ class TransactionController extends Controller
             );
         }
 
+        if ($transaction->destination_branch_id && auth()->user()->hasRole('agent')) {
+            return $this->sendErrorResponse(
+                __('messages.transaction_cross_branch_supervisor_only'),
+                403
+            );
+        }
+
         $this->service->destroy($transaction);
 
         return $this->sendResponse(

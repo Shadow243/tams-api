@@ -277,6 +277,12 @@ final class TransactionService
             throw new \Exception(__('messages.transaction_cannot_be_cancelled'));
         }
 
+        // Cross-branch transactions can only be cancelled by a supervisor or admin
+        $currentUser = auth()->user();
+        if ($transaction->destination_branch_id && $currentUser->hasRole('agent')) {
+            throw new \Exception(__('messages.transaction_cross_branch_supervisor_only'));
+        }
+
         return $this->changeStatus($transaction, TransactionStatus::CANCELLED);
     }
 
@@ -289,6 +295,17 @@ final class TransactionService
     {
         if ($transaction->isCompleted()) {
             throw new \Exception(__('messages.transaction_already_completed'));
+        }
+
+        // Transactions with a destination branch can only be validated by an agent
+        // whose branch matches that destination. Other roles are unrestricted.
+        $currentUser = auth()->user();
+        if (
+            $transaction->destination_branch_id
+            && $currentUser->hasRole('agent')
+            && $currentUser->branch_id !== $transaction->destination_branch_id
+        ) {
+            throw new \Exception(__('messages.transaction_not_your_branch_to_validate'));
         }
 
         return DB::transaction(function () use ($transaction) {
@@ -739,16 +756,32 @@ final class TransactionService
      */
     public function getStatistics(Request $request): array
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $branchId = $request->input('branch_id');
+        $startDate  = $request->input('start_date');
+        $endDate    = $request->input('end_date');
+        $branchId   = $request->input('branch_id');
         $currencyId = $request->input('currency_id');
+        $userId     = $request->input('user_id');
+
+        $currentUser = auth()->user();
 
         // Single aggregate query: counts, sums, and status breakdown in one pass
-        $stats = Transaction::query()
+        $query = Transaction::query()
             ->when($startDate && $endDate, fn($q) => $q->dateRange($startDate, $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($currencyId, fn($q) => $q->where('currency_id', $currencyId))
+            ->when($userId, fn($q) => $q->where('user_id', $userId));
+
+        // Mirror the same agent scoping used in buildTransactionQuery
+        if ($currentUser && $currentUser->branch_id && $currentUser->hasRole('agent')) {
+            $agentBranchId = $currentUser->branch_id;
+            $agentId       = $currentUser->id;
+            $query->where(function ($q) use ($agentId, $agentBranchId) {
+                $q->where('user_id', $agentId)
+                  ->orWhere('destination_branch_id', $agentBranchId);
+            });
+        }
+
+        $stats = $query
             ->selectRaw("
                 COUNT(*) as total_transactions,
                 COALESCE(SUM(gross_amount), 0) as total_amount,

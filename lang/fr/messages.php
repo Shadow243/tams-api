@@ -45,6 +45,8 @@ return [
     'transaction_cancelled_successfully' => 'Transaction annulée avec succès',
     'transaction_completed_successfully' => 'Transaction complétée avec succès',
     'transaction_already_completed' => 'Cette transaction a déjà été complétée.',
+    'transaction_not_your_branch_to_validate' => 'Cette transaction est destinée à une autre agence. Seul l\'agent de l\'agence destinataire peut la valider.',
+    'transaction_cross_branch_supervisor_only' => 'Les transactions inter-agences ne peuvent être annulées ou supprimées que par un superviseur.',
     'use_complete_endpoint' => 'Utilisez l\'endpoint de complétion pour compléter une transaction.',
     'transaction_status_updated_successfully' => 'Statut de la transaction mis à jour avec succès',
     'transaction_cannot_be_modified' => 'Cette transaction ne peut pas être modifiée',

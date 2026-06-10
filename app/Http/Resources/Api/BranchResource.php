@@ -23,7 +23,12 @@ class BranchResource extends JsonResource
             'country' => new CountryResource($this->whenLoaded('country')),
             'address' => $this->address,
             'cash_balance' => $this->cash_balance, // Legacy field (deprecated, use balances instead)
-            'balances' => $this->whenLoaded('balances', function () {
+            'balances' => $this->whenLoaded('balances', function () use ($request) {
+                $user = $request->user();
+                // Agents only see cash balances for their own branch
+                if ($user && $user->hasRole('agent') && $user->branch_id !== $this->id) {
+                    return [];
+                }
                 return $this->balances->map(function ($balance) {
                     return [
                         'currency_code' => $balance->currency_code,

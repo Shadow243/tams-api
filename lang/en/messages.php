@@ -45,6 +45,8 @@ return [
     'transaction_cancelled_successfully' => 'Transaction cancelled successfully',
     'transaction_completed_successfully' => 'Transaction completed successfully',
     'transaction_already_completed' => 'This transaction has already been completed.',
+    'transaction_not_your_branch_to_validate' => 'This transaction is destined for another branch. Only the agent of the destination branch can validate it.',
+    'transaction_cross_branch_supervisor_only' => 'Cross-branch transactions can only be cancelled or deleted by a supervisor.',
     'use_complete_endpoint' => 'Use the complete endpoint to complete a transaction.',
     'transaction_status_updated_successfully' => 'Transaction status updated successfully',
     'transaction_cannot_be_modified' => 'This transaction cannot be modified',
