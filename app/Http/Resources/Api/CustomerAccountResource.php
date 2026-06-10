@@ -16,6 +16,9 @@ class CustomerAccountResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+        $canSeeBalance = !$user || !$user->hasAnyRole(['agent', 'caissier']);
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -26,11 +29,11 @@ class CustomerAccountResource extends JsonResource
             'currency' => new CurrencyResource($this->whenLoaded('currency')),
             'branch_id' => $this->branch_id,
             'branch' => new BranchResource($this->whenLoaded('branch')),
-            'balance' => (float) $this->balance,
-            'credit_limit' => (float) $this->credit_limit,
-            'available_balance' => $this->available_balance,
-            'is_in_debt' => $this->isInDebt(),
-            'debt_amount' => $this->debt_amount,
+            'balance' => $canSeeBalance ? (float) $this->balance : null,
+            'credit_limit' => $canSeeBalance ? (float) $this->credit_limit : null,
+            'available_balance' => $canSeeBalance ? $this->available_balance : null,
+            'is_in_debt' => $canSeeBalance ? $this->isInDebt() : null,
+            'debt_amount' => $canSeeBalance ? $this->debt_amount : null,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
