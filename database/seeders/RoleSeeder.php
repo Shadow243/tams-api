@@ -89,6 +89,8 @@ class RoleSeeder extends Seeder
                 // Opérations sur comptes clients
                 ['name' => 'deposer_comptes_clients',   'group' => 'comptes_clients',   'module_name' => $modules[0]],
                 ['name' => 'retirer_comptes_clients',   'group' => 'comptes_clients',   'module_name' => $modules[0]],
+                // Rapport global comptes clients VIP (dashboard) — pas accessible à l'agent
+                ['name' => 'lire_rapport_comptes_clients', 'group' => 'comptes_clients', 'module_name' => $modules[0]],
             ]
         );
 
@@ -114,6 +116,8 @@ class RoleSeeder extends Seeder
                 // Opérations sur comptes clients VIP/standard
                 ['name' => 'deposer_comptes_clients', 'group' => 'comptes_clients',   'module_name' => $modules[0]],
                 ['name' => 'retirer_comptes_clients', 'group' => 'comptes_clients',   'module_name' => $modules[0]],
+                // Rapport global comptes clients VIP (dashboard) — pas accessible à l'agent
+                ['name' => 'lire_rapport_comptes_clients', 'group' => 'comptes_clients', 'module_name' => $modules[0]],
             ]
         );
 

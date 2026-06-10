@@ -205,13 +205,13 @@ final class TransactionService
             $query->where('transaction_type_id', $transactionTypeId);
         }
 
-        // Agents are automatically scoped to their branch:
-        // transactions they created OR transfers sent to their branch (to validate & serve)
+        // Agents see only their own transactions + any transfer sent to their branch for validation
         $currentUser = auth()->user();
         if ($currentUser && $currentUser->branch_id && $currentUser->hasRole('agent')) {
             $agentBranchId = $currentUser->branch_id;
-            $query->where(function ($q) use ($agentBranchId) {
-                $q->where('branch_id', $agentBranchId)
+            $agentId       = $currentUser->id;
+            $query->where(function ($q) use ($agentId, $agentBranchId) {
+                $q->where('user_id', $agentId)
                   ->orWhere('destination_branch_id', $agentBranchId);
             });
         } elseif ($branchId) {

@@ -259,7 +259,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('customer-accounts')->name('customer-accounts.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\CustomerAccountController::class, 'index'])->middleware('permission:lire_clients')->name('index');
         Route::post('/', [\App\Http\Controllers\Api\CustomerAccountController::class, 'store'])->middleware('permission:creer_clients')->name('store');
-        Route::get('/dashboard-report', [\App\Http\Controllers\Api\CustomerAccountController::class, 'dashboardReport'])->middleware('permission:lire_clients')->name('dashboard-report');
+        Route::get('/dashboard-report', [\App\Http\Controllers\Api\CustomerAccountController::class, 'dashboardReport'])->middleware('permission:lire_rapport_comptes_clients')->name('dashboard-report');
         Route::get('/customer/{customer}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'customerAccounts'])->middleware('permission:lire_clients')->name('customer.accounts');
         Route::get('/{account}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'show'])->middleware('permission:lire_clients')->name('show');
         Route::put('/{account}', [\App\Http\Controllers\Api\CustomerAccountController::class, 'update'])->middleware('permission:editer_clients')->name('update');
